@@ -1,0 +1,39 @@
+"use client"
+
+import { useState } from "react"
+import { TransactionList } from "@/components/dashboard/TransactionList"
+import { Download } from "lucide-react"
+import { api } from "@/lib/api"
+import { downloadCSV } from "@/lib/csv"
+
+export default function AdminTransactions() {
+  const [exporting, setExporting] = useState(false)
+
+  const handleExport = async () => {
+    setExporting(true)
+    try {
+      const result = await api.transactions.list({ limit: 9999 })
+      downloadCSV(result.data, "transactions")
+    } catch { /* silent */ }
+    setExporting(false)
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Transactions</h1>
+          <p className="text-sm text-gray-500">Real-time transaction tracking with live updates</p>
+        </div>
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800 disabled:opacity-50"
+        >
+          <Download className="h-4 w-4" /> {exporting ? "Exporting..." : "Export CSV"}
+        </button>
+      </div>
+      <TransactionList />
+    </div>
+  )
+}
