@@ -209,10 +209,33 @@ function TransactionForm({
   onSave: (p: any) => Promise<void>
   onCancel: () => void
 }) {
+  const [customers, setCustomers] = useState<any[]>([])
+  const [products, setProducts] = useState<any[]>([])
   const [form, setForm] = useState(
-    transaction ? { ...transaction, amount: String(transaction.amount) } : { customerName: "", productName: "", amount: "", status: "completed", paymentMethod: "Credit Card" }
+    transaction ? { ...transaction, amount: String(transaction.amount), quantity: transaction.quantity || 1 } : { customerName: "", productName: "", quantity: 1, amount: "", status: "completed", paymentMethod: "Credit Card" }
   )
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    api.customers.list({ limit: 100 }).then((r) => setCustomers(r.data)).catch(() => {})
+    api.products.list({ limit: 100 }).then((r) => setProducts(r.data)).catch(() => {})
+  }, [])
+
+  const handleProductChange = (productName: string) => {
+    const product = products.find((p: any) => p.name === productName)
+    if (product) {
+      const qty = form.quantity || 1
+      setForm({ ...form, productName, amount: String((product.price * qty).toFixed(2)) })
+    } else {
+      setForm({ ...form, productName })
+    }
+  }
+
+  const handleQuantityChange = (qty: number) => {
+    const product = products.find((p: any) => p.name === form.productName)
+    const amount = product ? (product.price * qty).toFixed(2) : form.amount
+    setForm({ ...form, quantity: qty, amount: String(amount) })
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -228,16 +251,31 @@ function TransactionForm({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Customer *</label>
-          <input required value={form.customerName} onChange={(e) => setForm({ ...form, customerName: e.target.value })}
-            className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200" />
+          <select required value={form.customerName} onChange={(e) => setForm({ ...form, customerName: e.target.value })}
+            className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200">
+            <option value="">Select customer</option>
+            {customers.map((c: any) => (
+              <option key={c.id} value={c.name}>{c.name}</option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Product *</label>
-          <input required value={form.productName} onChange={(e) => setForm({ ...form, productName: e.target.value })}
+          <select required value={form.productName} onChange={(e) => handleProductChange(e.target.value)}
+            className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200">
+            <option value="">Select product</option>
+            {products.map((p: any) => (
+              <option key={p.id} value={p.name}>${Number(p.price).toFixed(2)} — {p.name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Quantity</label>
+          <input type="number" min="1" value={form.quantity} onChange={(e) => handleQuantityChange(Math.max(1, parseInt(e.target.value) || 1))}
             className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200" />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Amount ($) *</label>
+          <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Total ($) *</label>
           <input required type="number" min="0.01" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })}
             className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200" />
         </div>
