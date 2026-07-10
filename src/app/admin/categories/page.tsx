@@ -48,12 +48,17 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="rounded-md border bg-white dark:border-gray-700 dark:bg-gray-800/90">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b px-6 py-4 dark:border-gray-700">
-        <div>
-          <h3 className="text-lg font-semibold dark:text-gray-100">Categories</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{categories.length} categories</p>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold">Categories</h1>
+        <p className="text-sm text-gray-500">Organize your product categories</p>
+      </div>
+      <div className="rounded-md border bg-white dark:border-gray-700 dark:bg-gray-800/90">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b px-6 py-4 dark:border-gray-700">
+          <div>
+            <h3 className="text-lg font-semibold dark:text-gray-100">Categories</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{categories.length} categories</p>
+          </div>
         <button
           onClick={() => { setShowForm(true); setEditing(null) }}
           className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
@@ -102,6 +107,7 @@ export default function CategoriesPage() {
           <p className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">No categories found</p>
         )}
       </div>
+    </div>
     </div>
   )
 }
