@@ -13,22 +13,22 @@ export function SalesFeed() {
   const { recentTransactions: transactions } = useDashboard()
 
   return (
-    <div className="rounded-md border bg-white dark:border-gray-700 dark:bg-gray-800/90">
-      <div className="flex items-center justify-between border-b px-6 py-4 dark:border-gray-700">
+    <div className="bg-white dark:bg-gray-900">
+      <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-gray-800">
         <div>
           <h3 className="text-lg font-semibold dark:text-gray-100">Live Sales Feed</h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">Real-time transaction activity</p>
         </div>
         <span className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
-          <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+          <span className="h-2 w-2 bg-green-500 animate-pulse" />
           Live
         </span>
       </div>
-      <div className="max-h-100 overflow-y-auto p-4 space-y-2">
+      <div className="h-80 overflow-y-auto p-4 space-y-2">
         {transactions.slice(0, 15).map((tx: any) => {
           const StatusIcon = statusIcon[tx.status as keyof typeof statusIcon]
           return (
-            <div key={tx.id} className="flex items-center gap-4 rounded-lg border p-3 text-sm dark:border-gray-700">
+            <div key={tx.id} className="flex items-center gap-4 border-b border-gray-50 p-3 text-sm dark:border-gray-800">
               <div>
                 <StatusIcon className={`h-5 w-5 ${tx.status === "completed" ? "text-green-500" : tx.status === "pending" ? "text-amber-500" : "text-red-500"}`} />
               </div>

@@ -40,10 +40,10 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-gray-950">
-      <div className="w-full max-w-sm rounded-xl border bg-white p-8 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+    <div className="flex min-h-screen items-center justify-center bg-white dark:bg-gray-950">
+      <div className="w-full max-w-sm p-8">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-600 text-lg font-bold text-white">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center bg-gray-900 text-lg font-bold text-white dark:bg-gray-700 dark:text-gray-100">
             D
           </div>
           <h1 className="text-xl font-semibold dark:text-gray-100">Create account</h1>
@@ -54,22 +54,22 @@ export default function SignupPage() {
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Name</label>
             <input type="text" required value={name} onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200" />
+                             className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400" />
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Email</label>
             <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200" />
+                             className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400" />
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Password</label>
             <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200" />
+                             className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400" />
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Role</label>
             <select value={role} onChange={(e) => setRole(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                             className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400">
               <option value="client">Client</option>
               <option value="admin">Admin</option>
             </select>
@@ -78,7 +78,7 @@ export default function SignupPage() {
           {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
           <button type="submit" disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
+            className="flex w-full items-center justify-center gap-2 bg-emerald-600 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600">
             <UserPlus className="h-4 w-4" />
             {loading ? "Creating account..." : "Create account"}
           </button>
@@ -86,7 +86,7 @@ export default function SignupPage() {
 
         <p className="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">Sign in</Link>
+          <Link href="/login" className="font-medium text-gray-900 underline dark:text-gray-100">Sign in</Link>
         </p>
       </div>
     </div>

@@ -35,10 +35,10 @@ function NavLinks({ nav, pathname, onClick }: { nav: NavItem[]; pathname: string
             key={item.href}
             href={item.href}
             onClick={onClick}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors ${
               active
-                ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-400"
-                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                ? "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100"
+                : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
             }`}
           >
             <Icon className="h-4 w-4" />
@@ -58,7 +58,7 @@ export function Sidebar({ role = "admin", open, onClose, onToggle }: { role?: "a
   const sidebarContent = (
     <aside className="flex h-full flex-col border-r bg-white dark:border-gray-800 dark:bg-gray-900">
       <div className="flex h-16 items-center gap-2 border-b px-6 dark:border-gray-800">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
+        <div className="flex h-8 w-8 items-center justify-center bg-gray-900 text-sm font-bold text-white dark:bg-gray-100 dark:text-gray-900">
           {role === "admin" ? "A" : "C"}
         </div>
         <span className="text-lg font-semibold dark:text-gray-200">{brand}</span>
@@ -69,7 +69,7 @@ export function Sidebar({ role = "admin", open, onClose, onToggle }: { role?: "a
       <div className="border-t p-4 dark:border-gray-800">
         <button
           onClick={onToggle}
-          className="ml-auto flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+          className="ml-auto flex items-center gap-2 px-3 py-2 text-sm text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
           title="Collapse sidebar"
         >
           <PanelLeftClose className="h-4 w-4" />
@@ -86,7 +86,7 @@ export function Sidebar({ role = "admin", open, onClose, onToggle }: { role?: "a
       {!open && (
         <button
           onClick={onToggle}
-          className="fixed left-0 top-1/2 z-40 hidden -translate-y-1/2 rounded-r-lg border border-l-0 bg-white p-2.5 shadow-sm hover:bg-gray-50 lg:block dark:border-gray-700 dark:bg-gray-900 dark:hover:bg-gray-800"
+          className="fixed left-0 top-1/2 z-40 hidden -translate-y-1/2 border border-l-0 bg-white p-2.5 hover:bg-gray-50 lg:block dark:border-gray-700 dark:bg-gray-900 dark:hover:bg-gray-800"
           title="Expand sidebar"
         >
           <PanelLeft className="h-5 w-5 text-gray-400" />
@@ -98,7 +98,7 @@ export function Sidebar({ role = "admin", open, onClose, onToggle }: { role?: "a
           <div className="fixed inset-y-0 left-0 w-64 shadow-xl">
             <aside className="flex h-full flex-col border-r bg-white dark:border-gray-800 dark:bg-gray-900">
               <div className="flex h-16 items-center gap-2 border-b px-6 dark:border-gray-800">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
+                <div className="flex h-8 w-8 items-center justify-center bg-gray-900 text-sm font-bold text-white dark:bg-gray-100 dark:text-gray-900">
                   {role === "admin" ? "A" : "C"}
                 </div>
                 <span className="text-lg font-semibold dark:text-gray-200">{brand}</span>

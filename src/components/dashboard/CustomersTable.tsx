@@ -79,8 +79,8 @@ export function CustomersTable() {
   }
 
   return (
-    <div className="rounded-md border bg-white dark:border-gray-700 dark:bg-gray-800/90">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b px-6 py-4 dark:border-gray-700">
+    <div className="bg-white dark:bg-gray-900">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 px-6 py-4 dark:border-gray-800">
         <div>
           <h3 className="text-lg font-semibold dark:text-gray-100">Customers</h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">{customers.total} total customers</p>
@@ -93,12 +93,12 @@ export function CustomersTable() {
               placeholder="Search customers..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-56 rounded-sm border bg-gray-50 py-1.5 pl-9 pr-3 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500"
+              className="w-56 border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-3 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500 dark:focus:border-gray-400"
             />
           </div>
           <button
             onClick={() => { setShowForm(true); setEditing(null) }}
-            className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+            className="flex items-center gap-1.5 bg-emerald-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600"
           >
             <Plus className="h-4 w-4" /> Add
           </button>
@@ -116,7 +116,8 @@ export function CustomersTable() {
       <div>
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b bg-gray-50 text-left text-xs font-medium uppercase text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+            <tr className="border-b border-gray-100 text-left text-xs font-medium text-gray-400 dark:border-gray-800 dark:text-gray-500">
+              <th className="px-6 py-3 w-10">No.</th>
               <th className="px-6 py-3">Customer</th>
               <th className="px-6 py-3">Email</th>
               <th className="px-6 py-3">Orders</th>
@@ -127,38 +128,34 @@ export function CustomersTable() {
             </tr>
           </thead>
           <tbody>
-            {customers.data.map((customer: any) => (
-              <tr key={customer.id} className="border-b hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800">
+            {customers.data.map((customer: any, index: number) => (
+              <tr key={customer.id} className="border-b border-gray-50 dark:border-gray-800">
+                <td className="px-6 py-4 text-gray-400 dark:text-gray-500">{(page - 1) * 10 + index + 1}</td>
                 <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-400">
-                      {customer.name.charAt(0)}
-                    </div>
-                    <span className="font-medium dark:text-gray-200">{customer.name}</span>
-                  </div>
+                  <span className="font-medium dark:text-gray-200">{customer.name}</span>
                 </td>
                 <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{customer.email}</td>
                 <td className="px-6 py-4 dark:text-gray-300">{customer.totalOrders}</td>
                 <td className="px-6 py-4 font-medium dark:text-gray-200">${Number(customer.totalSpent).toFixed(2)}</td>
                 <td className="px-6 py-4">
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium ${
                     customer.status === "active"
                       ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400"
-                      : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                      : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
                   }`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${customer.status === "active" ? "bg-green-500" : "bg-gray-400 dark:bg-gray-500"}`} />
+                    <span className={`h-1.5 w-1.5 ${customer.status === "active" ? "bg-green-500" : "bg-gray-400 dark:bg-gray-500"}`} />
                     {customer.status}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{customer.joinedAt}</td>
                 <td className="px-6 py-4 text-right">
-                  <button onClick={() => setEditing(customer.id)} className="p-1.5 text-gray-400 hover:text-indigo-600 dark:text-gray-500 dark:hover:text-indigo-400">
+                  <button onClick={() => setEditing(customer.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
                     <Pencil className="h-4 w-4" />
                   </button>
-                  <button onClick={() => handleDelete(customer.id)} className="p-1.5 text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400">
+                  <button onClick={() => handleDelete(customer.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">
                     <Trash2 className="h-4 w-4" />
                   </button>
-                  <button className="p-1.5 text-gray-400 hover:text-indigo-600 dark:text-gray-500 dark:hover:text-indigo-400">
+                  <button className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
                     <Mail className="h-4 w-4" />
                   </button>
                 </td>
@@ -205,22 +202,22 @@ function CustomerForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="border-b bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-800">
+    <form onSubmit={handleSubmit} className="border-b border-gray-100 bg-gray-50/50 p-6 dark:border-gray-800 dark:bg-gray-800/30">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Name *</label>
           <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200" />
+            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400" />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Email *</label>
           <input required type="email" value={form.email} onChange={(e) => { setForm({ ...form, email: e.target.value }); setError("") }}
-            className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200" />
+            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400" />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Status</label>
           <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
-            className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200">
+            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400">
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
@@ -229,11 +226,11 @@ function CustomerForm({
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
       <div className="mt-4 flex gap-2">
         <button disabled={saving} type="submit"
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
+          className="bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600">
           {saving ? "Saving..." : "Save"}
         </button>
         <button type="button" onClick={onCancel}
-          className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700">
+          className="border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
           Cancel
         </button>
       </div>

@@ -8,7 +8,7 @@ export function RevenueChart({ data }: { data: RevenueEntry[] }) {
   const { dark } = useTheme()
 
   return (
-    <div className="rounded-md border bg-white p-6 dark:border-gray-700 dark:bg-gray-800/90">
+    <div className="bg-white p-6 dark:bg-gray-900">
       <h3 className="mb-1 text-lg font-semibold dark:text-gray-100">Revenue Overview</h3>
       <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">Weekly revenue and transaction trends</p>
       <div className="h-80">
@@ -31,8 +31,8 @@ export function RevenueChart({ data }: { data: RevenueEntry[] }) {
               ]}
             />
             <Legend wrapperStyle={{ color: dark ? "#9ca3af" : "#6b7280" }} />
-            <Bar yAxisId="left" dataKey="revenue" fill="#6366f1" radius={[4, 4, 0, 0]} name="Revenue" />
-            <Bar yAxisId="right" dataKey="transactions" fill="#22c55e" radius={[4, 4, 0, 0]} name="Transactions" />
+            <Bar yAxisId="left" dataKey="revenue" fill="#6366f1" name="Revenue" />
+            <Bar yAxisId="right" dataKey="transactions" fill="#22c55e" name="Transactions" />
           </BarChart>
         </ResponsiveContainer>
       </div>

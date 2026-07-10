@@ -28,10 +28,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-gray-950">
-      <div className="w-full max-w-sm rounded-xl border bg-white p-8 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+    <div className="flex min-h-screen items-center justify-center bg-white dark:bg-gray-950">
+      <div className="w-full max-w-sm p-8">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-600 text-lg font-bold text-white">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center bg-gray-900 text-lg font-bold text-white dark:bg-gray-700 dark:text-gray-100">
             D
           </div>
           <h1 className="text-xl font-semibold dark:text-gray-100">Welcome back</h1>
@@ -44,7 +44,7 @@ export default function LoginPage() {
             <input
               type="email" required value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+               className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400"
             />
           </div>
           <div>
@@ -52,7 +52,7 @@ export default function LoginPage() {
             <input
               type="password" required value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+               className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400"
             />
           </div>
 
@@ -62,14 +62,14 @@ export default function LoginPage() {
 
           <button
             type="submit" disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 bg-emerald-600 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600"
           >
             <LogIn className="h-4 w-4" />
             {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
 
-        <div className="mt-6 rounded-lg bg-gray-50 p-3 text-xs text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+        <div className="mt-6 border-b border-gray-100 pb-3 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400">
           <p className="font-medium mb-1">Demo accounts:</p>
           <p>Admin: admin@dashboard.com / admin123</p>
           <p>Client: client@dashboard.com / client123</p>
@@ -77,7 +77,7 @@ export default function LoginPage() {
 
         <p className="mt-4 text-center text-xs text-gray-500 dark:text-gray-400">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">Sign up</Link>
+          <Link href="/signup" className="font-medium text-gray-900 underline dark:text-gray-100">Sign up</Link>
         </p>
       </div>
     </div>

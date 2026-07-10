@@ -91,8 +91,8 @@ export function ProductsTable() {
   }
 
   return (
-    <div className="rounded-md border bg-white dark:border-gray-700 dark:bg-gray-800/90">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b px-6 py-4 dark:border-gray-700">
+    <div className="bg-white dark:bg-gray-900">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 px-6 py-4 dark:border-gray-800">
         <div>
           <h3 className="text-lg font-semibold dark:text-gray-100">Products</h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">{products.total} total products</p>
@@ -105,13 +105,13 @@ export function ProductsTable() {
               placeholder="Search products..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-48 rounded-sm border bg-gray-50 py-1.5 pl-9 pr-3 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500"
+              className="w-48 border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-3 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500 dark:focus:border-gray-400"
             />
           </div>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="rounded-lg border bg-gray-50 px-3 py-1.5 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+            className="border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400"
           >
             <option value="All">All</option>
             {categoryNames.map((c) => (
@@ -120,7 +120,7 @@ export function ProductsTable() {
           </select>
           <button
             onClick={() => { setShowForm(true); setEditing(null) }}
-            className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+            className="flex items-center gap-1.5 bg-emerald-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600"
           >
             <Plus className="h-4 w-4" /> Add
           </button>
@@ -139,7 +139,8 @@ export function ProductsTable() {
       <div>
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b bg-gray-50 text-left text-xs font-medium uppercase text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+            <tr className="border-b border-gray-100 text-left text-xs font-medium text-gray-400 dark:border-gray-800 dark:text-gray-500">
+              <th className="px-6 py-3 w-10">No.</th>
               <th className="px-6 py-3">Product</th>
               <th className="px-6 py-3">Category</th>
               <th className="px-6 py-3">Price</th>
@@ -149,14 +150,15 @@ export function ProductsTable() {
             </tr>
           </thead>
           <tbody>
-            {products.data.map((product: any) => (
-              <tr key={product.id} className="border-b hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800">
+            {products.data.map((product: any, index: number) => (
+              <tr key={product.id} className="border-b border-gray-50 dark:border-gray-800">
+                <td className="px-6 py-4 text-gray-400 dark:text-gray-500">{(page - 1) * 10 + index + 1}</td>
                 <td className="px-6 py-4">
                   <span className="font-medium dark:text-gray-200">{product.name}</span>
                   <span className="ml-2 text-gray-500 dark:text-gray-400">{product.id}</span>
                 </td>
                 <td className="px-6 py-4">
-                  <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-400">
+                  <span className="bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                     {product.category}
                   </span>
                 </td>
@@ -164,10 +166,10 @@ export function ProductsTable() {
                 <td className="px-6 py-4 dark:text-gray-300">{product.stock}</td>
                 <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{product.createdAt}</td>
                 <td className="px-6 py-4 text-right">
-                  <button onClick={() => setEditing(product.id)} className="p-1.5 text-gray-400 hover:text-indigo-600 dark:text-gray-500 dark:hover:text-indigo-400">
+                  <button onClick={() => setEditing(product.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
                     <Pencil className="h-4 w-4" />
                   </button>
-                  <button onClick={() => handleDelete(product.id)} className="p-1.5 text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400">
+                  <button onClick={() => handleDelete(product.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </td>
@@ -212,43 +214,43 @@ function ProductForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="border-b bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-800">
+    <form onSubmit={handleSubmit} className="border-b border-gray-100 bg-gray-50/50 p-6 dark:border-gray-800 dark:bg-gray-800/30">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Name *</label>
           <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200" />
+            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400" />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Category *</label>
           <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
-            className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200">
+            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400">
             {categories.map((c) => (<option key={c} value={c}>{c}</option>))}
           </select>
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Price *</label>
           <input required type="number" min="0" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })}
-            className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200" />
+            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400" />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Stock</label>
           <input type="number" min="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })}
-            className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200" />
+            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400" />
         </div>
         <div className="sm:col-span-2 lg:col-span-1">
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Description</label>
           <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200" />
+            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400" />
         </div>
       </div>
       <div className="mt-4 flex gap-2">
         <button disabled={saving} type="submit"
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
+          className="bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600">
           {saving ? "Saving..." : "Save"}
         </button>
         <button type="button" onClick={onCancel}
-          className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700">
+          className="border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
           Cancel
         </button>
       </div>

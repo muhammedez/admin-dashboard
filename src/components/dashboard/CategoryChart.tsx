@@ -11,7 +11,7 @@ export function CategoryChart({ data }: { data: { category: string; revenue: num
   if (!data.length) return null
 
   return (
-    <div className="rounded-md border bg-white p-6 dark:border-gray-700 dark:bg-gray-800/90">
+    <div className="bg-white p-6 dark:bg-gray-900">
       <h3 className="mb-1 text-lg font-semibold dark:text-gray-100">Revenue by Category</h3>
       <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">Breakdown across product categories</p>
       <div className="h-72">

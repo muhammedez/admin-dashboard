@@ -97,8 +97,8 @@ export function TransactionList() {
   }
 
   return (
-    <div className="rounded-md border bg-white dark:border-gray-700 dark:bg-gray-800/90">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b px-6 py-4 dark:border-gray-700">
+    <div className="bg-white dark:bg-gray-900">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 px-6 py-4 dark:border-gray-800">
         <div>
           <h3 className="text-lg font-semibold dark:text-gray-100">Transactions</h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">{transactions.total} total transactions</p>
@@ -111,7 +111,7 @@ export function TransactionList() {
               placeholder="Search transactions..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-48 rounded-sm border bg-gray-50 py-1.5 pl-9 pr-3 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500"
+              className="w-48 border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-3 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500 dark:focus:border-gray-400"
             />
           </div>
           <div className="relative">
@@ -119,7 +119,7 @@ export function TransactionList() {
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="w-32 rounded-lg border bg-gray-50 py-1.5 pl-9 pr-3 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 appearance-none"
+              className="w-32 border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-3 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400"
             >
               <option value="all">All</option>
               <option value="completed">Completed</option>
@@ -129,7 +129,7 @@ export function TransactionList() {
           </div>
           <button
             onClick={() => { setShowForm(true); setEditing(null) }}
-            className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+            className="flex items-center gap-1.5 bg-emerald-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600"
           >
             <Plus className="h-4 w-4" /> Add
           </button>
@@ -147,7 +147,8 @@ export function TransactionList() {
       <div>
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b bg-gray-50 text-left text-xs font-medium uppercase text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+            <tr className="border-b border-gray-100 text-left text-xs font-medium text-gray-400 dark:border-gray-800 dark:text-gray-500">
+              <th className="px-6 py-3 w-10">No.</th>
               <th className="px-6 py-3">Transaction</th>
               <th className="px-6 py-3">Customer</th>
               <th className="px-6 py-3">Product</th>
@@ -159,16 +160,17 @@ export function TransactionList() {
             </tr>
           </thead>
           <tbody>
-            {transactions.data.map((tx: any) => {
+            {transactions.data.map((tx: any, index: number) => {
               const StatusIcon = statusIcon[tx.status] || statusIcon.completed
               return (
-                <tr key={tx.id} className="border-b hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800">
+                <tr key={tx.id} className="border-b border-gray-50 dark:border-gray-800">
+                  <td className="px-6 py-4 text-gray-400 dark:text-gray-500">{(page - 1) * 10 + index + 1}</td>
                   <td className="px-6 py-4 font-medium dark:text-gray-200">{tx.id}</td>
                   <td className="px-6 py-4 dark:text-gray-300">{tx.customerName}</td>
                   <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{tx.productName}</td>
                   <td className="px-6 py-4 font-medium dark:text-gray-200">${Number(tx.amount).toFixed(2)}</td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBg[tx.status]}`}>
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium ${statusBg[tx.status]}`}>
                       <StatusIcon className="h-3.5 w-3.5" />
                       {tx.status}
                     </span>
@@ -178,12 +180,12 @@ export function TransactionList() {
                     {new Date(tx.timestamp).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 text-right whitespace-nowrap">
-                    <button onClick={() => setEditing(tx.id)} className="p-1.5 text-gray-400 hover:text-indigo-600 dark:text-gray-500 dark:hover:text-indigo-400">
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <button onClick={() => handleDelete(tx.id)} className="p-1.5 text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                  <button onClick={() => setEditing(tx.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button onClick={() => handleDelete(tx.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                   </td>
                 </tr>
               )
@@ -247,12 +249,12 @@ function TransactionForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="border-b bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-800">
+    <form onSubmit={handleSubmit} className="border-b border-gray-100 bg-gray-50/50 p-6 dark:border-gray-800 dark:bg-gray-800/30">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Customer *</label>
           <select required value={form.customerName} onChange={(e) => setForm({ ...form, customerName: e.target.value })}
-            className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200">
+            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400">
             <option value="">Select customer</option>
             {customers.map((c: any) => (
               <option key={c.id} value={c.name}>{c.name}</option>
@@ -262,7 +264,7 @@ function TransactionForm({
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Product *</label>
           <select required value={form.productName} onChange={(e) => handleProductChange(e.target.value)}
-            className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200">
+            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400">
             <option value="">Select product</option>
             {products.map((p: any) => (
               <option key={p.id} value={p.name}>${Number(p.price).toFixed(2)} — {p.name}</option>
@@ -272,17 +274,17 @@ function TransactionForm({
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Quantity</label>
           <input type="number" min="1" value={form.quantity} onChange={(e) => handleQuantityChange(Math.max(1, parseInt(e.target.value) || 1))}
-            className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200" />
+            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400" />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Total ($) *</label>
           <input required type="number" min="0.01" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })}
-            className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200" />
+            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400" />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Status</label>
           <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
-            className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200">
+            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400">
             <option value="completed">Completed</option>
             <option value="pending">Pending</option>
             <option value="failed">Failed</option>
@@ -291,7 +293,7 @@ function TransactionForm({
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Payment Method</label>
           <select value={form.paymentMethod} onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
-            className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200">
+            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400">
             <option value="Credit Card">Credit Card</option>
             <option value="Debit Card">Debit Card</option>
             <option value="PayPal">PayPal</option>
@@ -300,11 +302,11 @@ function TransactionForm({
       </div>
       <div className="mt-4 flex gap-2">
         <button disabled={saving} type="submit"
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50">
+          className="bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600">
           {saving ? "Saving..." : "Save"}
         </button>
         <button type="button" onClick={onCancel}
-          className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700">
+          className="border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
           Cancel
         </button>
       </div>
