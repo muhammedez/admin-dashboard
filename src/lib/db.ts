@@ -17,6 +17,12 @@ export function getDb(): DatabaseSync {
 
 function initSchema(db: DatabaseSync) {
   db.exec(`
+    CREATE TABLE IF NOT EXISTS categories (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE,
+      createdAt TEXT NOT NULL DEFAULT (date('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS products (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -69,6 +75,11 @@ function initSchema(db: DatabaseSync) {
     seed(db)
     seedUsers(db)
   }
+
+  const catRow = db.prepare("SELECT COUNT(*) as cnt FROM categories").get() as { cnt: number }
+  if (catRow.cnt === 0) {
+    seedCategories(db)
+  }
 }
 
 export function hashPassword(password: string): string {
@@ -105,6 +116,18 @@ export function verifyPassword(email: string, password: string): { id: number; n
   if (!user) return null
   if (user.password !== hashPassword(password)) return null
   return { id: user.id, name: user.name, email: user.email, role: user.role }
+}
+
+function seedCategories(db: DatabaseSync) {
+  const categories = [
+    ["CAT-1", "Electronics", "2025-01-01"],
+    ["CAT-2", "Accessories", "2025-01-01"],
+    ["CAT-3", "Footwear", "2025-01-01"],
+    ["CAT-4", "Fitness", "2025-01-01"],
+    ["CAT-5", "Home", "2025-01-01"],
+  ]
+  const insert = db.prepare("INSERT INTO categories (id, name, createdAt) VALUES (?, ?, ?)")
+  for (const c of categories) insert.run(...c)
 }
 
 function seed(db: DatabaseSync) {

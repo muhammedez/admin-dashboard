@@ -38,6 +38,12 @@ export const api = {
     get: (params?: { from?: string; to?: string }) =>
       request<{ stats: any; revenueData: any[]; categoryRevenue: any[]; paymentMethods: any[] }>(`/stats${qs(params || {})}`),
   },
+  categories: {
+    list: () => request<{ data: any[] }>("/categories"),
+    create: (data: any) => request<any>("/categories", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: any) => request<any>(`/categories/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    delete: (id: string) => request<{ success: boolean }>(`/categories/${id}?id=${id}`, { method: "DELETE" }),
+  },
   transactions: {
     list: (params?: { page?: number; limit?: number; search?: string; status?: string }) =>
       request<{ data: any[]; total: number; page: number; limit: number; totalPages: number }>(`/transactions${qs(params || {})}`),

@@ -7,8 +7,6 @@ import { useDashboard } from "@/lib/store"
 import { useToast } from "@/lib/toast"
 import { Pagination } from "@/components/ui/Pagination"
 
-const categories = ["All", "Electronics", "Accessories", "Footwear", "Fitness", "Home"]
-
 export function ProductsTable() {
   const { products, productPage, productSearch, productCategory, setProducts } = useDashboard()
   const [loading, setLoading] = useState(true)
@@ -17,9 +15,14 @@ export function ProductsTable() {
   const [page, setPage] = useState(productPage || 1)
   const [editing, setEditing] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [categories, setCategories] = useState<string[]>([])
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const mountedRef = useRef(false)
   const { toast } = useToast()
+
+  useEffect(() => {
+    api.categories.list().then((r) => setCategories(r.data.map((c: any) => c.name))).catch(() => {})
+  }, [])
 
   const load = useCallback(async (p: number, q: string, cat: string) => {
     setLoading(true)
@@ -114,6 +117,7 @@ export function ProductsTable() {
             onChange={(e) => setCategory(e.target.value)}
             className="rounded-lg border bg-gray-50 px-3 py-1.5 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
           >
+            <option value="All">All</option>
             {categories.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
@@ -129,6 +133,7 @@ export function ProductsTable() {
 
       {(showForm || editing) && (
         <ProductForm
+          categories={categories}
           product={editing ? products.data.find((p: any) => p.id === editing) : null}
           onSave={handleSave}
           onCancel={() => { setShowForm(false); setEditing(null) }}
@@ -185,10 +190,12 @@ export function ProductsTable() {
 }
 
 function ProductForm({
+  categories,
   product,
   onSave,
   onCancel,
 }: {
+  categories: string[]
   product: any | null
   onSave: (p: any) => Promise<void>
   onCancel: () => void
