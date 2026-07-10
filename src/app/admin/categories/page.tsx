@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import { api } from "@/lib/api"
+import { useDashboard } from "@/lib/store"
 import { useToast } from "@/lib/toast"
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { categories, setCategories } = useDashboard()
   const [editing, setEditing] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const { toast } = useToast()
@@ -17,10 +17,7 @@ export default function CategoriesPage() {
       const result = await api.categories.list()
       setCategories(result.data)
     } catch { /* silent */ }
-    setLoading(false)
   }
-
-  useEffect(() => { load() }, [])
 
   const handleSave = async (name: string) => {
     try {
@@ -101,7 +98,7 @@ export default function CategoriesPage() {
             ))}
           </tbody>
         </table>
-        {!loading && !categories.length && (
+        {!categories.length && (
           <p className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">No categories found</p>
         )}
       </div>

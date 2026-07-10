@@ -8,21 +8,17 @@ import { useToast } from "@/lib/toast"
 import { Pagination } from "@/components/ui/Pagination"
 
 export function ProductsTable() {
-  const { products, productPage, productSearch, productCategory, setProducts } = useDashboard()
+  const { products, productPage, productSearch, productCategory, setProducts, categories } = useDashboard()
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState(productSearch)
   const [category, setCategory] = useState(productCategory)
   const [page, setPage] = useState(productPage || 1)
   const [editing, setEditing] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
-  const [categories, setCategories] = useState<string[]>([])
+  const categoryNames = categories.map((c: any) => c.name)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const mountedRef = useRef(false)
   const { toast } = useToast()
-
-  useEffect(() => {
-    api.categories.list().then((r) => setCategories(r.data.map((c: any) => c.name))).catch(() => {})
-  }, [])
 
   const load = useCallback(async (p: number, q: string, cat: string) => {
     setLoading(true)
@@ -118,7 +114,7 @@ export function ProductsTable() {
             className="rounded-lg border bg-gray-50 px-3 py-1.5 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
           >
             <option value="All">All</option>
-            {categories.map((c) => (
+            {categoryNames.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
@@ -133,7 +129,7 @@ export function ProductsTable() {
 
       {(showForm || editing) && (
         <ProductForm
-          categories={categories}
+          categories={categoryNames}
           product={editing ? products.data.find((p: any) => p.id === editing) : null}
           onSave={handleSave}
           onCancel={() => { setShowForm(false); setEditing(null) }}
@@ -227,7 +223,7 @@ function ProductForm({
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Category *</label>
           <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
             className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200">
-            {categories.filter((c) => c !== "All").map((c) => (<option key={c} value={c}>{c}</option>))}
+            {categories.map((c) => (<option key={c} value={c}>{c}</option>))}
           </select>
         </div>
         <div>

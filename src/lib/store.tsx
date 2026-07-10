@@ -19,6 +19,7 @@ interface DashboardStore {
   products: EntityState
   customers: EntityState
   transactions: EntityState
+  categories: any[]
   recentTransactions: any[]
   productPage: number
   customerPage: number
@@ -31,6 +32,7 @@ interface DashboardStore {
   setProducts: (state: EntityState, page: number, search: string, category: string) => void
   setCustomers: (state: EntityState, page: number, search: string) => void
   setTransactions: (state: EntityState, page: number, search: string, filter: string) => void
+  setCategories: (data: any[]) => void
   refreshRecentTransactions: () => Promise<void>
 }
 
@@ -58,6 +60,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [products, setProductsState] = useState<EntityState>(empty)
   const [customers, setCustomersState] = useState<EntityState>(empty)
   const [transactions, setTransactionsState] = useState<EntityState>(empty)
+  const [categories, setCategories] = useState<any[]>([])
   const [recentTransactions, setRecentTransactions] = useState<any[]>([])
   const [productPage, setProductPage] = useState(1)
   const [customerPage, setCustomerPage] = useState(1)
@@ -103,6 +106,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     api.products.list({ page: 1, limit: 10 }).then((r) => setProductsState(r)).catch(() => {})
     api.customers.list({ page: 1, limit: 10 }).then((r) => setCustomersState(r)).catch(() => {})
     api.transactions.list({ page: 1, limit: 10 }).then((r) => setTransactionsState(r)).catch(() => {})
+    api.categories.list().then((r) => setCategories(r.data)).catch(() => {})
   }, [])
 
   const handleSetDateRange = useCallback((range: { from: string; to: string }) => {
@@ -112,13 +116,14 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   return (
     <StoreContext.Provider value={{
       stats, revenueData, categoryRevenue, paymentMethods, dateRange, setDateRange: handleSetDateRange,
-      products, customers, transactions, recentTransactions,
+      products, customers, transactions, categories, recentTransactions,
       productPage, customerPage, transactionPage,
       productSearch, customerSearch, transactionSearch,
       productCategory, transactionFilter,
       setProducts: (state, page, search, category) => { setProductsState(state); setProductPage(page); setProductSearch(search); setProductCategory(category) },
       setCustomers: (state, page, search) => { setCustomersState(state); setCustomerPage(page); setCustomerSearch(search) },
       setTransactions: (state, page, search, filter) => { setTransactionsState(state); setTransactionPage(page); setTransactionSearch(search); setTransactionFilter(filter) },
+      setCategories: (data) => setCategories(data),
       refreshRecentTransactions,
     }}>
       {children}
