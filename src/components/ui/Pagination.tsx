@@ -11,7 +11,7 @@ export function Pagination({ page, totalPages, total, onPageChange }: Pagination
   if (totalPages <= 1) return null
 
   return (
-    <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4 dark:border-gray-800">
+    <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4 dark:border-gray-700">
       <p className="text-sm text-gray-500 dark:text-gray-400">
         {total} total result{total !== 1 ? "s" : ""}
       </p>

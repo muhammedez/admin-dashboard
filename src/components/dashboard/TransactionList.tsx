@@ -97,8 +97,8 @@ export function TransactionList() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-900">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 px-6 py-4 dark:border-gray-800">
+    <div className="border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 px-6 py-4 dark:border-gray-700">
         <div>
           <h3 className="text-lg font-semibold dark:text-gray-100">Transactions</h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">{transactions.total} total transactions</p>
@@ -147,7 +147,7 @@ export function TransactionList() {
       <div>
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-100 text-left text-xs font-medium text-gray-400 dark:border-gray-800 dark:text-gray-500">
+            <tr className="h-10 border-b border-gray-200 text-left text-xs font-medium text-gray-400 dark:border-gray-700 dark:text-gray-500">
               <th className="px-6 py-3 w-10">No.</th>
               <th className="px-6 py-3">Transaction</th>
               <th className="px-6 py-3">Customer</th>
@@ -163,23 +163,23 @@ export function TransactionList() {
             {transactions.data.map((tx: any, index: number) => {
               const StatusIcon = statusIcon[tx.status] || statusIcon.completed
               return (
-                <tr key={tx.id} className="border-b border-gray-50 dark:border-gray-800">
-                  <td className="px-6 py-4 text-gray-400 dark:text-gray-500">{(page - 1) * 10 + index + 1}</td>
-                  <td className="px-6 py-4 font-medium dark:text-gray-200">{tx.id}</td>
-                  <td className="px-6 py-4 dark:text-gray-300">{tx.customerName}</td>
-                  <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{tx.productName}</td>
-                  <td className="px-6 py-4 font-medium dark:text-gray-200">${Number(tx.amount).toFixed(2)}</td>
-                  <td className="px-6 py-4">
+                <tr key={tx.id} className="h-10 border-b border-gray-200 dark:border-gray-700">
+                  <td className="px-6 py-2.5 text-gray-400 dark:text-gray-500">{(page - 1) * 10 + index + 1}</td>
+                  <td className="px-6 py-2.5 font-medium dark:text-gray-200">{tx.id}</td>
+                  <td className="px-6 py-2.5 dark:text-gray-300">{tx.customerName}</td>
+                  <td className="px-6 py-2.5 text-gray-600 dark:text-gray-400">{tx.productName}</td>
+                  <td className="px-6 py-2.5 font-medium dark:text-gray-200">${Number(tx.amount).toFixed(2)}</td>
+                  <td className="px-6 py-2.5">
                     <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium ${statusBg[tx.status]}`}>
                       <StatusIcon className="h-3.5 w-3.5" />
                       {tx.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{tx.paymentMethod}</td>
-                  <td className="px-6 py-4 text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                  <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{tx.paymentMethod}</td>
+                  <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400 whitespace-nowrap">
                     {new Date(tx.timestamp).toLocaleString()}
                   </td>
-                  <td className="px-6 py-4 text-right whitespace-nowrap">
+                  <td className="px-6 py-2.5 text-right whitespace-nowrap">
                   <button onClick={() => setEditing(tx.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
                     <Pencil className="h-4 w-4" />
                   </button>
@@ -254,7 +254,7 @@ function TransactionForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="border-b border-gray-100 bg-gray-50/50 p-6 dark:border-gray-800 dark:bg-gray-800/30">
+    <form onSubmit={handleSubmit} className="border-b border-gray-200 bg-gray-50/50 p-6 dark:border-gray-700 dark:bg-gray-800/30">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Customer *</label>

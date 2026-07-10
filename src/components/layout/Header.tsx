@@ -35,6 +35,8 @@ export function Header() {
         />
       </div>
 
+      <div className="ml-auto" />
+
       <button
         onClick={toggle}
         className="p-2 hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -48,7 +50,7 @@ export function Header() {
         <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
       </button>
 
-      <div className="flex items-center gap-3 border-l pl-4 ml-auto dark:border-gray-800">
+      <div className="flex items-center gap-3 border-l pl-4 dark:border-gray-800">
         <div className="flex h-8 w-8 items-center justify-center bg-gray-900 text-sm font-medium text-white dark:bg-gray-700 dark:text-gray-100">
           {user?.name?.charAt(0) || "U"}
         </div>

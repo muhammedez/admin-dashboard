@@ -8,7 +8,7 @@ export function RevenueChart({ data }: { data: RevenueEntry[] }) {
   const { dark } = useTheme()
 
   return (
-    <div className="bg-white p-6 dark:bg-gray-900">
+    <div className="border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
       <h3 className="mb-1 text-lg font-semibold dark:text-gray-100">Revenue Overview</h3>
       <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">Weekly revenue and transaction trends</p>
       <div className="h-80">
