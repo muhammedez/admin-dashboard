@@ -214,7 +214,7 @@ function TransactionForm({
   const [customers, setCustomers] = useState<any[]>([])
   const [products, setProducts] = useState<any[]>([])
   const [form, setForm] = useState(
-    transaction ? { ...transaction, amount: String(transaction.amount), quantity: transaction.quantity || 1 } : { customerName: "", productName: "", quantity: 1, amount: "", status: "completed", paymentMethod: "Credit Card" }
+    transaction ? { ...transaction, amount: String(transaction.amount), quantity: String(transaction.quantity || 1) } : { customerName: "", productName: "", quantity: "1", amount: "", status: "completed", paymentMethod: "Credit Card" }
   )
   const [saving, setSaving] = useState(false)
 
@@ -233,10 +233,15 @@ function TransactionForm({
     }
   }
 
-  const handleQuantityChange = (qty: number) => {
-    const product = products.find((p: any) => p.name === form.productName)
-    const amount = product ? (product.price * qty).toFixed(2) : form.amount
-    setForm({ ...form, quantity: qty, amount: String(amount) })
+  const handleQuantityChange = (raw: string) => {
+    setForm({ ...form, quantity: raw })
+    const qty = parseInt(raw, 10)
+    if (qty > 0) {
+      const product = products.find((p: any) => p.name === form.productName)
+      if (product) {
+        setForm((prev: any) => ({ ...prev, amount: (product.price * qty).toFixed(2) }))
+      }
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -273,7 +278,7 @@ function TransactionForm({
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Quantity</label>
-          <input type="number" min="1" value={form.quantity} onChange={(e) => handleQuantityChange(Math.max(1, parseInt(e.target.value) || 1))}
+          <input type="number" min="1" value={form.quantity} onChange={(e) => handleQuantityChange(e.target.value)}
             className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400" />
         </div>
         <div>

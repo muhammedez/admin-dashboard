@@ -47,6 +47,11 @@ export async function POST(request: Request) {
     "INSERT INTO transactions (id, customerName, productName, amount, status, timestamp, paymentMethod) VALUES (?, ?, ?, ?, ?, ?, ?)"
   ).run(id, customerName, productName, amount, status ?? "completed", timestamp, paymentMethod ?? "Credit Card")
 
+  const customer = db.prepare("SELECT * FROM customers WHERE name = ?").get(customerName) as any
+  if (customer) {
+    db.prepare("UPDATE customers SET totalOrders = totalOrders + 1, totalSpent = totalSpent + ? WHERE name = ?").run(amount, customerName)
+  }
+
   const transaction = db.prepare("SELECT * FROM transactions WHERE id = ?").get(id)
   return NextResponse.json(transaction, { status: 201 })
 }
