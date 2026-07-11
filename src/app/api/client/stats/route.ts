@@ -75,6 +75,8 @@ export async function GET(request: NextRequest) {
     prevSpent = sp.s || 1
   }
 
+  const productCount = (await db.prepare("SELECT COUNT(*) as c FROM products").get() as any).c
+
   const calcChange = (current: number, previous: number) => {
     if (!previous) return current > 0 ? 100 : 0
     return Math.round(((current - previous) / previous) * 1000) / 10
@@ -82,6 +84,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     customerName: custName,
+    totalProducts: productCount,
     stats: {
       totalRevenue: totalSpent,
       totalTransactions: txCount,

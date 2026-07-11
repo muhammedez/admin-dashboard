@@ -7,12 +7,12 @@ import { SalesFeed } from "@/components/dashboard/SalesFeed"
 import { DollarSign, ShoppingCart, Package } from "lucide-react"
 
 export default function ClientDashboard() {
-  const { stats: globalStats, clientStats, clientRevenueData, clientName } = useDashboard()
+  const { clientStats, clientRevenueData, clientName, clientTotalProducts } = useDashboard()
 
   const cards = [
     { title: "My Spending", value: `$${(clientStats.totalSpent || 0).toLocaleString()}`, change: clientStats.revenueChange || 0, icon: DollarSign },
     { title: "My Orders", value: (clientStats.totalTransactions || 0).toString(), change: clientStats.ordersChange || 0, icon: ShoppingCart },
-    { title: "Products Available", value: globalStats.totalProducts.toString(), change: globalStats.productsChange, icon: Package },
+    { title: "Products Available", value: (clientTotalProducts || 0).toString(), change: 0, icon: Package },
   ]
 
   return (

@@ -25,6 +25,7 @@ interface DashboardStore {
   clientStats: any
   clientRevenueData: any[]
   clientName: string
+  clientTotalProducts: number
   productPage: number
   customerPage: number
   transactionPage: number
@@ -69,6 +70,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [clientStats, setClientStats] = useState<any>({ totalSpent: 0, totalTransactions: 0, totalRevenue: 0, revenueChange: 0, ordersChange: 0 })
   const [clientRevenueData, setClientRevenueData] = useState<any[]>([])
   const [clientName, setClientName] = useState("")
+  const [clientTotalProducts, setClientTotalProducts] = useState(0)
   const [productPage, setProductPage] = useState(1)
   const [customerPage, setCustomerPage] = useState(1)
   const [transactionPage, setTransactionPage] = useState(1)
@@ -95,6 +97,16 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     } catch { /* silent */ }
   }, [])
 
+  const fetchClientTransactions = useCallback(async () => {
+    try {
+      const res = await fetch("/api/client/transactions?page=1&limit=10", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+      const result = await res.json()
+      setTransactionsState(result)
+    } catch { /* silent */ }
+  }, [token])
+
   const fetchClientStats = useCallback(async () => {
     try {
       const res = await fetch("/api/client/stats", {
@@ -105,23 +117,19 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         setClientStats(data.stats)
         setClientRevenueData(data.revenueData || [])
         setClientName(data.customerName || "")
+        setClientTotalProducts(data.totalProducts || 0)
       }
     } catch { /* silent */ }
   }, [token])
 
   const refreshAll = useCallback(async () => {
-    try {
-      const [p, c, t, cat] = await Promise.all([
-        api.products.list({ page: 1, limit: 10 }),
-        api.customers.list({ page: 1, limit: 10 }),
-        api.transactions.list({ page: 1, limit: 10 }),
-        api.categories.list(),
-      ])
-      setProductsState(p)
-      setCustomersState(c)
-      setTransactionsState(t)
-      setCategories(cat.data)
-    } catch { /* silent */ }
+    const promises = [
+      api.products.list({ page: 1, limit: 10 }).then((p) => setProductsState(p)).catch(() => {}),
+      api.customers.list({ page: 1, limit: 10 }).then((c) => setCustomersState(c)).catch(() => {}),
+      api.transactions.list({ page: 1, limit: 10 }).then((t) => setTransactionsState(t)).catch(() => {}),
+      api.categories.list().then((cat) => setCategories(cat.data)).catch(() => {}),
+    ]
+    await Promise.all(promises)
     await fetchStats(dateRange.from, dateRange.to)
   }, [fetchStats, dateRange])
 
@@ -129,12 +137,14 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     refreshAll()
     refreshRecentTransactions()
     fetchClientStats()
-  }, [refreshAll, refreshRecentTransactions, fetchClientStats])
+    fetchClientTransactions()
+  }, [refreshAll, refreshRecentTransactions, fetchClientStats, fetchClientTransactions])
 
   useEffect(() => {
     refreshAll()
     refreshRecentTransactions()
     fetchClientStats()
+    fetchClientTransactions()
   }, [])
 
   useEffect(() => {
@@ -149,7 +159,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   return (
     <StoreContext.Provider value={{
       stats, revenueData, categoryRevenue, paymentMethods, dateRange, setDateRange: handleSetDateRange,
-      products, customers, transactions, categories, recentTransactions, clientStats, clientRevenueData, clientName,
+      products, customers, transactions, categories, recentTransactions, clientStats, clientRevenueData, clientName, clientTotalProducts,
       productPage, customerPage, transactionPage,
       productSearch, customerSearch, transactionSearch,
       productCategory, transactionFilter,
