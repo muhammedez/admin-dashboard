@@ -23,7 +23,7 @@ const statusBg: Record<string, string> = {
   failed: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400",
 }
 
-export function TransactionList() {
+export function TransactionList({ customerName: filterCustomer }: { customerName?: string }) {
   const { transactions, transactionPage, transactionSearch, transactionFilter, setTransactions } = useDashboard()
   const { user } = useAuth()
   const isAdmin = user?.role === "admin"
@@ -41,16 +41,28 @@ export function TransactionList() {
   const load = useCallback(async (p: number, q: string, f: string) => {
     setLoading(true)
     try {
-      const result = await api.transactions.list({
-        page: p,
-        limit: 10,
-        search: q || undefined,
-        status: f !== "all" ? f : undefined,
-      })
+      let result
+      if (isAdmin) {
+        result = await api.transactions.list({
+          page: p,
+          limit: 10,
+          search: q || undefined,
+          status: f !== "all" ? f : undefined,
+        })
+      } else {
+        const params = new URLSearchParams({ page: String(p), limit: "10" })
+        if (q) params.set("search", q)
+        if (f && f !== "all") params.set("status", f)
+        const token = localStorage.getItem("auth_token")
+        const res = await fetch(`/api/client/transactions?${params}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
+        result = await res.json()
+      }
       setTransactions(result, p, q, f)
     } catch { /* silent */ }
     setLoading(false)
-  }, [setTransactions])
+  }, [setTransactions, isAdmin])
 
   useEffect(() => {
     const q = searchParams.get("search") || ""
@@ -58,12 +70,10 @@ export function TransactionList() {
       skipNextDebounce.current = true
       setSearch(q)
       load(1, q, filter)
-    } else if (!transactions.data.length) {
-      load(page, search, filter)
     } else {
-      setLoading(false)
+      load(page, search, filter)
     }
-  }, [])
+  }, [filterCustomer])
 
   useEffect(() => {
     if (skipNextDebounce.current) { skipNextDebounce.current = false; return }

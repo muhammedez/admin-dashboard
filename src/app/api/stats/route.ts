@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server"
 import { getDb } from "@/lib/db"
+import { requireAdmin } from "@/lib/api-auth"
 import type { NextRequest } from "next/server"
 
 export async function GET(request: NextRequest) {
+  const session = requireAdmin(request)
+  if (session instanceof NextResponse) return session
   const { searchParams } = new URL(request.url)
   const from = searchParams.get("from") || ""
   const to = searchParams.get("to") || ""

@@ -4,6 +4,9 @@ import { requireAdmin } from "@/lib/api-auth"
 import type { NextRequest } from "next/server"
 
 export async function GET(request: NextRequest) {
+  const session = requireAdmin(request)
+  if (session instanceof NextResponse) return session
+
   const { searchParams } = new URL(request.url)
   const page = Math.max(1, Number(searchParams.get("page")) || 1)
   const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit")) || 10))

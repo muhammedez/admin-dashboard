@@ -1,4 +1,9 @@
 const BASE = "/api"
+let _token: string | null = null
+
+export function setApiToken(token: string | null) {
+  _token = token
+}
 
 function qs(params: Record<string, string | number | undefined>): string {
   const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== "")
@@ -6,8 +11,10 @@ function qs(params: Record<string, string | number | undefined>): string {
 }
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" }
+  if (_token) headers["Authorization"] = `Bearer ${_token}`
   const res = await fetch(`${BASE}${url}`, {
-    headers: { "Content-Type": "application/json", ...options?.headers },
+    headers: { ...headers, ...options?.headers as Record<string, string> },
     ...options,
   })
   if (!res.ok) {
@@ -45,7 +52,7 @@ export const api = {
     delete: (id: string) => request<{ success: boolean }>(`/categories/${id}?id=${id}`, { method: "DELETE" }),
   },
   transactions: {
-    list: (params?: { page?: number; limit?: number; search?: string; status?: string }) =>
+    list: (params?: { page?: number; limit?: number; search?: string; status?: string; customerName?: string }) =>
       request<{ data: any[]; total: number; page: number; limit: number; totalPages: number }>(`/transactions${qs(params || {})}`),
     get: (id: string) => request<any>(`/transactions/${id}`),
     create: (data: any) => request<any>(`/transactions`, { method: "POST", body: JSON.stringify(data) }),

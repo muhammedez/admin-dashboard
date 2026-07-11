@@ -9,15 +9,18 @@ const statusIcon = {
   failed: XCircle,
 }
 
-export function SalesFeed() {
-  const { recentTransactions: transactions } = useDashboard()
+export function SalesFeed({ customerName }: { customerName?: string }) {
+  const { recentTransactions: allTransactions } = useDashboard()
+  const transactions = customerName
+    ? allTransactions.filter((tx: any) => tx.customerName === customerName)
+    : allTransactions
 
   return (
     <div className="border border-gray-200 bg-white dark:border-0 dark:bg-gray-900">
       <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
         <div>
           <h3 className="text-lg font-semibold dark:text-gray-100">Live Sales Feed</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Real-time transaction activity</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{customerName ? "Your recent activity" : "Real-time transaction activity"}</p>
         </div>
         <span className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
           <span className="h-2 w-2 bg-green-500 animate-pulse" />
@@ -46,6 +49,9 @@ export function SalesFeed() {
             </div>
           )
         })}
+        {!transactions.length && (
+          <p className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">No transactions yet</p>
+        )}
       </div>
     </div>
   )

@@ -1,7 +1,8 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from "react"
-import { api } from "./api"
+import { api, setApiToken } from "./api"
+import { useAuth } from "./auth"
 
 interface EntityState {
   data: any[]
@@ -48,6 +49,12 @@ const weekAgo = () => {
 }
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
+  const { token } = useAuth()
+
+  useEffect(() => {
+    setApiToken(token)
+  }, [token])
+
   const [stats, setStats] = useState<any>({
     totalRevenue: 0, totalTransactions: 0, activeCustomers: 0, totalProducts: 0,
     revenueChange: 0, transactionsChange: 0, customersChange: 0, productsChange: 0,

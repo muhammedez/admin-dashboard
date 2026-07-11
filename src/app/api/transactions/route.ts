@@ -4,11 +4,14 @@ import { requireAdmin } from "@/lib/api-auth"
 import type { NextRequest } from "next/server"
 
 export async function GET(request: NextRequest) {
+  const session = requireAdmin(request)
+  if (session instanceof NextResponse) return session
   const { searchParams } = new URL(request.url)
   const page = Math.max(1, Number(searchParams.get("page")) || 1)
   const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit")) || 10))
   const search = searchParams.get("search") || ""
   const status = searchParams.get("status") || ""
+  const customerName = searchParams.get("customerName") || ""
   const offset = (page - 1) * limit
 
   const db = getDb()
@@ -22,6 +25,10 @@ export async function GET(request: NextRequest) {
   if (status && status !== "all") {
     conditions.push("status = ?")
     params.push(status)
+  }
+  if (customerName) {
+    conditions.push("customerName = ?")
+    params.push(customerName)
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : ""

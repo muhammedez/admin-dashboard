@@ -40,7 +40,8 @@ function initSchema(db: DatabaseSync) {
       totalOrders INTEGER NOT NULL DEFAULT 0,
       totalSpent REAL NOT NULL DEFAULT 0,
       joinedAt TEXT NOT NULL DEFAULT (date('now')),
-      status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'inactive'))
+      status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'inactive')),
+      userId INTEGER REFERENCES users(id)
     );
 
     CREATE TABLE IF NOT EXISTS transactions (
@@ -70,10 +71,12 @@ function initSchema(db: DatabaseSync) {
     );
   `)
 
+  try { db.exec("ALTER TABLE customers ADD COLUMN userId INTEGER REFERENCES users(id)") } catch { /* already exists */ }
+
   const row = db.prepare("SELECT COUNT(*) as cnt FROM products").get() as { cnt: number }
   if (row.cnt === 0) {
-    seed(db)
     seedUsers(db)
+    seed(db)
   }
 
   const catRow = db.prepare("SELECT COUNT(*) as cnt FROM categories").get() as { cnt: number }
@@ -145,14 +148,14 @@ function seed(db: DatabaseSync) {
   ]
 
   const customers = [
-    ["C-001", "Alice Johnson", "alice@example.com", 12, 2340.50, "2024-06-15", "active"],
-    ["C-002", "Bob Smith", "bob@example.com", 8, 1250.00, "2024-08-20", "active"],
-    ["C-003", "Carol Davis", "carol@example.com", 5, 680.25, "2025-01-10", "active"],
-    ["C-004", "David Wilson", "david@example.com", 15, 3450.75, "2024-03-05", "active"],
-    ["C-005", "Eve Martinez", "eve@example.com", 3, 210.00, "2025-04-18", "inactive"],
-    ["C-006", "Frank Taylor", "frank@example.com", 20, 5200.00, "2024-01-12", "active"],
-    ["C-007", "Grace Lee", "grace@example.com", 7, 980.50, "2024-11-30", "active"],
-    ["C-008", "Henry Brown", "henry@example.com", 2, 150.00, "2025-06-01", "inactive"],
+    ["C-001", "Alice Johnson", "alice@example.com", 12, 2340.50, "2024-06-15", "active", 2],
+    ["C-002", "Bob Smith", "bob@example.com", 8, 1250.00, "2024-08-20", "active", null],
+    ["C-003", "Carol Davis", "carol@example.com", 5, 680.25, "2025-01-10", "active", null],
+    ["C-004", "David Wilson", "david@example.com", 15, 3450.75, "2024-03-05", "active", null],
+    ["C-005", "Eve Martinez", "eve@example.com", 3, 210.00, "2025-04-18", "inactive", null],
+    ["C-006", "Frank Taylor", "frank@example.com", 20, 5200.00, "2024-01-12", "active", null],
+    ["C-007", "Grace Lee", "grace@example.com", 7, 980.50, "2024-11-30", "active", null],
+    ["C-008", "Henry Brown", "henry@example.com", 2, 150.00, "2025-06-01", "inactive", null],
   ]
 
   const transactions = [
@@ -172,7 +175,7 @@ function seed(db: DatabaseSync) {
     "INSERT INTO products (id, name, category, price, stock, description, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
   )
   const insertCustomer = db.prepare(
-    "INSERT INTO customers (id, name, email, totalOrders, totalSpent, joinedAt, status) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO customers (id, name, email, totalOrders, totalSpent, joinedAt, status, userId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
   )
   const insertTransaction = db.prepare(
     "INSERT INTO transactions (id, customerName, productName, amount, status, timestamp, paymentMethod) VALUES (?, ?, ?, ?, ?, ?, ?)"
