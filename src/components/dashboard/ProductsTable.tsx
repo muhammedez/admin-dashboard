@@ -161,48 +161,50 @@ export function ProductsTable() {
           <TableSkeleton rows={5} cols={isAdmin ? 7 : 6} />
         ) : (
           <>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="h-10 border-b border-gray-200 text-left text-xs font-medium text-gray-400 dark:border-gray-700 dark:text-gray-500">
-                  <th className="px-6 py-3 w-10">No.</th>
-                  <th className="px-6 py-3">Product</th>
-                  <th className="px-6 py-3">Category</th>
-                  <th className="px-6 py-3">Price</th>
-                  <th className="px-6 py-3">Stock</th>
-                  <th className="px-6 py-3">Created</th>
-                  {isAdmin && <th className="px-6 py-3 text-right">Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {products.data.map((product: any, index: number) => (
-                  <tr key={product.id} className="h-10 border-b border-gray-200 dark:border-gray-700">
-                    <td className="px-6 py-2.5 text-gray-400 dark:text-gray-500">{(page - 1) * 10 + index + 1}</td>
-                    <td className="px-6 py-2.5">
-                      <span className="font-medium dark:text-gray-200">{product.name}</span>
-                      <span className="ml-2 text-gray-500 dark:text-gray-400">{product.id}</span>
-                    </td>
-                    <td className="px-6 py-2.5">
-                      <span className="bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                        {product.category}
-                      </span>
-                    </td>
-                    <td className="px-6 py-2.5 font-medium dark:text-gray-200">${Number(product.price).toFixed(2)}</td>
-                    <td className="px-6 py-2.5 dark:text-gray-300">{product.stock}</td>
-                    <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{product.createdAt}</td>
-                    {isAdmin && (
-                      <td className="px-6 py-2.5 text-right">
-                        <button onClick={() => setEditing(product.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button onClick={() => handleDelete(product.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </td>
-                    )}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="h-10 border-b border-gray-200 text-left text-xs font-medium text-gray-400 dark:border-gray-700 dark:text-gray-500">
+                    <th className="px-6 py-3 w-10">No.</th>
+                    <th className="px-6 py-3">Product</th>
+                    <th className="px-6 py-3">Category</th>
+                    <th className="px-6 py-3">Price</th>
+                    <th className="px-6 py-3">Stock</th>
+                    <th className="px-6 py-3">Created</th>
+                    {isAdmin && <th className="px-6 py-3 text-right">Actions</th>}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {products.data.map((product: any, index: number) => (
+                    <tr key={product.id} className="h-10 border-b border-gray-200 dark:border-gray-700">
+                      <td className="px-6 py-2.5 text-gray-400 dark:text-gray-500">{(page - 1) * 10 + index + 1}</td>
+                      <td className="px-6 py-2.5">
+                        <span className="font-medium dark:text-gray-200">{product.name}</span>
+                        <span className="ml-2 text-gray-500 dark:text-gray-400">{product.id}</span>
+                      </td>
+                      <td className="px-6 py-2.5">
+                        <span className="bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                          {product.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-2.5 font-medium dark:text-gray-200">${Number(product.price).toFixed(2)}</td>
+                      <td className="px-6 py-2.5 dark:text-gray-300">{product.stock}</td>
+                      <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{product.createdAt}</td>
+                      {isAdmin && (
+                        <td className="px-6 py-2.5 text-right">
+                          <button onClick={() => setEditing(product.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button onClick={() => handleDelete(product.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             {!loading && !products.data.length && (
               <p className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">No products found</p>
             )}

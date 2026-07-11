@@ -143,57 +143,59 @@ export function CustomersTable() {
           <TableSkeleton rows={5} cols={isAdmin ? 8 : 7} />
         ) : (
           <>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="h-10 border-b border-gray-200 text-left text-xs font-medium text-gray-400 dark:border-gray-700 dark:text-gray-500">
-                  <th className="px-6 py-3 w-10">No.</th>
-                  <th className="px-6 py-3">Customer</th>
-                  <th className="px-6 py-3">Email</th>
-                  <th className="px-6 py-3">Orders</th>
-                  <th className="px-6 py-3">Total Spent</th>
-                  <th className="px-6 py-3">Status</th>
-                  <th className="px-6 py-3">Joined</th>
-                  {isAdmin && <th className="px-6 py-3 text-right">Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {customers.data.map((customer: any, index: number) => (
-                  <tr key={customer.id} className="h-10 border-b border-gray-200 dark:border-gray-700">
-                    <td className="px-6 py-2.5 text-gray-400 dark:text-gray-500">{(page - 1) * 10 + index + 1}</td>
-                    <td className="px-6 py-2.5">
-                      <span className="font-medium dark:text-gray-200">{customer.name}</span>
-                    </td>
-                    <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{customer.email}</td>
-                    <td className="px-6 py-2.5 dark:text-gray-300">{customer.totalOrders}</td>
-                    <td className="px-6 py-2.5 font-medium dark:text-gray-200">${Number(customer.totalSpent).toFixed(2)}</td>
-                    <td className="px-6 py-2.5">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium ${
-                        customer.status === "active"
-                          ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400"
-                          : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
-                      }`}>
-                        <span className={`h-1.5 w-1.5 ${customer.status === "active" ? "bg-green-500" : "bg-gray-400 dark:bg-gray-500"}`} />
-                        {customer.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{customer.joinedAt}</td>
-                    {isAdmin && (
-                      <td className="px-6 py-2.5 text-right">
-                        <button onClick={() => setEditing(customer.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button onClick={() => handleDelete(customer.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                        <button className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
-                          <Mail className="h-4 w-4" />
-                        </button>
-                      </td>
-                    )}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="h-10 border-b border-gray-200 text-left text-xs font-medium text-gray-400 dark:border-gray-700 dark:text-gray-500">
+                    <th className="px-6 py-3 w-10">No.</th>
+                    <th className="px-6 py-3">Customer</th>
+                    <th className="px-6 py-3">Email</th>
+                    <th className="px-6 py-3">Orders</th>
+                    <th className="px-6 py-3">Total Spent</th>
+                    <th className="px-6 py-3">Status</th>
+                    <th className="px-6 py-3">Joined</th>
+                    {isAdmin && <th className="px-6 py-3 text-right">Actions</th>}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {customers.data.map((customer: any, index: number) => (
+                    <tr key={customer.id} className="h-10 border-b border-gray-200 dark:border-gray-700">
+                      <td className="px-6 py-2.5 text-gray-400 dark:text-gray-500">{(page - 1) * 10 + index + 1}</td>
+                      <td className="px-6 py-2.5">
+                        <span className="font-medium dark:text-gray-200">{customer.name}</span>
+                      </td>
+                      <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{customer.email}</td>
+                      <td className="px-6 py-2.5 dark:text-gray-300">{customer.totalOrders}</td>
+                      <td className="px-6 py-2.5 font-medium dark:text-gray-200">${Number(customer.totalSpent).toFixed(2)}</td>
+                      <td className="px-6 py-2.5">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium ${
+                          customer.status === "active"
+                            ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400"
+                            : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                        }`}>
+                          <span className={`h-1.5 w-1.5 ${customer.status === "active" ? "bg-green-500" : "bg-gray-400 dark:bg-gray-500"}`} />
+                          {customer.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{customer.joinedAt}</td>
+                      {isAdmin && (
+                        <td className="px-6 py-2.5 text-right">
+                          <button onClick={() => setEditing(customer.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button onClick={() => handleDelete(customer.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                          <button className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
+                            <Mail className="h-4 w-4" />
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             {!loading && !customers.data.length && (
               <p className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">No customers found</p>
             )}

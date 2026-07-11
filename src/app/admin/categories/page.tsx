@@ -91,37 +91,39 @@ export default function CategoriesPage() {
           <TableSkeleton rows={3} cols={isAdmin ? 4 : 3} />
         ) : (
           <>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="h-10 border-b border-gray-200 text-left text-xs font-medium text-gray-400 dark:border-gray-700 dark:text-gray-500">
-                  <th className="px-6 py-3 w-10">No.</th>
-                  <th className="px-6 py-3">Name</th>
-                  <th className="px-6 py-3">Created</th>
-                  {isAdmin && <th className="px-6 py-3 text-right">Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {categories.map((cat: any, index: number) => (
-                  <tr key={cat.id} className="h-10 border-b border-gray-200 dark:border-gray-700">
-                    <td className="px-6 py-2.5 text-gray-400 dark:text-gray-500">{index + 1}</td>
-                    <td className="px-6 py-2.5">
-                      <span className="font-medium dark:text-gray-200">{cat.name}</span>
-                    </td>
-                    <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{cat.createdAt}</td>
-                    {isAdmin && (
-                      <td className="px-6 py-2.5 text-right">
-                        <button onClick={() => setEditing(cat.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button onClick={() => handleDelete(cat.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </td>
-                    )}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="h-10 border-b border-gray-200 text-left text-xs font-medium text-gray-400 dark:border-gray-700 dark:text-gray-500">
+                    <th className="px-6 py-3 w-10">No.</th>
+                    <th className="px-6 py-3">Name</th>
+                    <th className="px-6 py-3">Created</th>
+                    {isAdmin && <th className="px-6 py-3 text-right">Actions</th>}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {categories.map((cat: any, index: number) => (
+                    <tr key={cat.id} className="h-10 border-b border-gray-200 dark:border-gray-700">
+                      <td className="px-6 py-2.5 text-gray-400 dark:text-gray-500">{index + 1}</td>
+                      <td className="px-6 py-2.5">
+                        <span className="font-medium dark:text-gray-200">{cat.name}</span>
+                      </td>
+                      <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{cat.createdAt}</td>
+                      {isAdmin && (
+                        <td className="px-6 py-2.5 text-right">
+                          <button onClick={() => setEditing(cat.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button onClick={() => handleDelete(cat.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             {!categories.length && (
               <p className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">No categories found</p>
             )}

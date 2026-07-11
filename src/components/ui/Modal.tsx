@@ -38,8 +38,8 @@ export function Modal({
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative z-10 mx-4 w-full max-w-3xl rounded-lg border border-gray-200 bg-white shadow-xl dark:border-0 dark:bg-gray-900">
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+      <div className="relative z-10 mx-4 flex w-full max-w-3xl max-h-[90vh] flex-col rounded-lg border border-gray-200 bg-white shadow-xl dark:border-0 dark:bg-gray-900">
+        <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
           <h3 className="text-lg font-semibold dark:text-gray-100">{title}</h3>
           <button
             onClick={onClose}
@@ -48,7 +48,7 @@ export function Modal({
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="overflow-y-auto p-6">{children}</div>
       </div>
     </div>,
     document.body

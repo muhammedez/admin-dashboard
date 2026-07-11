@@ -184,55 +184,57 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
           <TableSkeleton rows={5} cols={isAdmin ? 9 : 8} />
         ) : (
           <>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="h-10 border-b border-gray-200 text-left text-xs font-medium text-gray-400 dark:border-gray-700 dark:text-gray-500">
-                  <th className="px-6 py-3 w-10">No.</th>
-                  <th className="px-6 py-3">Transaction</th>
-                  <th className="px-6 py-3">Customer</th>
-                  <th className="px-6 py-3">Product</th>
-                  <th className="px-6 py-3">Amount</th>
-                  <th className="px-6 py-3">Status</th>
-                  <th className="px-6 py-3">Payment</th>
-                  <th className="px-6 py-3">Time</th>
-                  {isAdmin && <th className="px-6 py-3 text-right">Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.data.map((tx: any, index: number) => {
-                  const StatusIcon = statusIcon[tx.status] || statusIcon.completed
-                  return (
-                    <tr key={tx.id} className="h-10 border-b border-gray-200 dark:border-gray-700">
-                      <td className="px-6 py-2.5 text-gray-400 dark:text-gray-500">{(page - 1) * 10 + index + 1}</td>
-                      <td className="px-6 py-2.5 font-medium dark:text-gray-200">{tx.id}</td>
-                      <td className="px-6 py-2.5 dark:text-gray-300">{tx.customerName}</td>
-                      <td className="px-6 py-2.5 text-gray-600 dark:text-gray-400">{tx.productName}</td>
-                      <td className="px-6 py-2.5 font-medium dark:text-gray-200">${Number(tx.amount).toFixed(2)}</td>
-                      <td className="px-6 py-2.5">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium ${statusBg[tx.status]}`}>
-                          <StatusIcon className="h-3.5 w-3.5" />
-                          {tx.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{tx.paymentMethod}</td>
-                      <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                        {new Date(tx.timestamp).toLocaleString()}
-                      </td>
-                      {isAdmin && (
-                      <td className="px-6 py-2.5 text-right whitespace-nowrap">
-                      <button onClick={() => setEditing(tx.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button onClick={() => handleDelete(tx.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                      </td>
-                      )}
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="h-10 border-b border-gray-200 text-left text-xs font-medium text-gray-400 dark:border-gray-700 dark:text-gray-500">
+                    <th className="px-6 py-3 w-10">No.</th>
+                    <th className="px-6 py-3">Transaction</th>
+                    <th className="px-6 py-3">Customer</th>
+                    <th className="px-6 py-3">Product</th>
+                    <th className="px-6 py-3">Amount</th>
+                    <th className="px-6 py-3">Status</th>
+                    <th className="px-6 py-3">Payment</th>
+                    <th className="px-6 py-3">Time</th>
+                    {isAdmin && <th className="px-6 py-3 text-right">Actions</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.data.map((tx: any, index: number) => {
+                    const StatusIcon = statusIcon[tx.status] || statusIcon.completed
+                    return (
+                      <tr key={tx.id} className="h-10 border-b border-gray-200 dark:border-gray-700">
+                        <td className="px-6 py-2.5 text-gray-400 dark:text-gray-500">{(page - 1) * 10 + index + 1}</td>
+                        <td className="px-6 py-2.5 font-medium dark:text-gray-200">{tx.id}</td>
+                        <td className="px-6 py-2.5 dark:text-gray-300">{tx.customerName}</td>
+                        <td className="px-6 py-2.5 text-gray-600 dark:text-gray-400">{tx.productName}</td>
+                        <td className="px-6 py-2.5 font-medium dark:text-gray-200">${Number(tx.amount).toFixed(2)}</td>
+                        <td className="px-6 py-2.5">
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium ${statusBg[tx.status]}`}>
+                            <StatusIcon className="h-3.5 w-3.5" />
+                            {tx.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{tx.paymentMethod}</td>
+                        <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                          {new Date(tx.timestamp).toLocaleString()}
+                        </td>
+                        {isAdmin && (
+                        <td className="px-6 py-2.5 text-right whitespace-nowrap">
+                        <button onClick={() => setEditing(tx.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => handleDelete(tx.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                        </td>
+                        )}
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
             {!loading && !transactions.data.length && (
               <p className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">No transactions found</p>
             )}

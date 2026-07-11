@@ -22,7 +22,7 @@ export default function AdminProducts() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h1 className="text-2xl font-semibold">Product Catalogue</h1>
           <p className="text-sm text-gray-500">Manage your product inventory</p>
