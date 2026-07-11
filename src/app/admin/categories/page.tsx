@@ -141,19 +141,19 @@ function CategoryForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="flex items-end gap-4">
-        <div className="flex-1">
-          <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Category Name *</label>
-          <input required value={name} onChange={(e) => setName(e.target.value)}
-            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-gray-400" />
-        </div>
-        <button disabled={saving} type="submit"
-          className="bg-emerald-600 px-4 py-2 text-sm font-medium !text-white hover:bg-emerald-700 disabled:opacity-50 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600">
-          {saving ? "Saving..." : "Save"}
-        </button>
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Category Name *</label>
+        <input required value={name} onChange={(e) => setName(e.target.value)}
+          className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm outline-none ring-emerald-500/20 transition-all focus:border-emerald-500 focus:ring-2 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-emerald-400" />
+      </div>
+      <div className="mt-6 flex justify-start gap-3">
         <button type="button" onClick={onCancel}
-          className="border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-700">
+          className="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
           Cancel
+        </button>
+        <button disabled={saving} type="submit"
+          className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium !text-white shadow-sm transition-all hover:bg-emerald-700 disabled:opacity-50 dark:bg-emerald-500 dark:hover:bg-emerald-600">
+          {saving ? "Saving..." : "Save"}
         </button>
       </div>
     </form>
