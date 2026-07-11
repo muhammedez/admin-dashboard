@@ -58,9 +58,7 @@ export function Sidebar({ role = "admin", open, onClose, onToggle }: { role?: "a
   const sidebarContent = (
     <aside className="flex h-full flex-col border-r bg-white dark:border-gray-800 dark:bg-gray-900">
       <div className="flex h-16 items-center gap-2 border-b px-6 dark:border-gray-800">
-        <div className="flex h-8 w-8 items-center justify-center bg-gray-900 text-sm font-bold text-white dark:bg-gray-100 dark:text-gray-900">
-          {role === "admin" ? "A" : "C"}
-        </div>
+        <img src="/logo.svg" alt="Logo" className="h-8 w-8" />
         <span className="text-lg font-semibold dark:text-gray-200">{brand}</span>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-4">
@@ -98,9 +96,7 @@ export function Sidebar({ role = "admin", open, onClose, onToggle }: { role?: "a
           <div className="fixed inset-y-0 left-0 w-64 shadow-xl">
             <aside className="flex h-full flex-col border-r bg-white dark:border-gray-800 dark:bg-gray-900">
               <div className="flex h-16 items-center gap-2 border-b px-6 dark:border-gray-800">
-                <div className="flex h-8 w-8 items-center justify-center bg-gray-900 text-sm font-bold text-white dark:bg-gray-100 dark:text-gray-900">
-                  {role === "admin" ? "A" : "C"}
-                </div>
+                <img src="/logo.svg" alt="Logo" className="h-8 w-8" />
                 <span className="text-lg font-semibold dark:text-gray-200">{brand}</span>
               </div>
               <nav className="flex-1 space-y-1 overflow-y-auto p-4">
