@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Plus, Pencil, Trash2, Search, X } from "lucide-react"
 import { api } from "@/lib/api"
 import { useDashboard } from "@/lib/store"
@@ -25,6 +25,7 @@ export function ProductsTable() {
   const modal = useModalState<string>()
   const categoryNames = categories.map((c: any) => c.name)
   const { toast } = useToast()
+  const [optimisticStock, setOptimisticStock] = useState<Record<string, number>>({})
 
   const load = useCallback(async (p: number, q: string, cat: string) => {
     setLoading(true)
@@ -39,6 +40,9 @@ export function ProductsTable() {
     } catch { /* silent */ }
     setLoading(false)
   }, [setProducts])
+
+  const loadRef = useRef(load)
+  loadRef.current = load
 
   const { skipNext } = useDebouncedSearch(() => {
     setPage(1)
@@ -58,6 +62,13 @@ export function ProductsTable() {
     }
   }, [])
 
+  useEffect(() => {
+    const id = setInterval(() => {
+      loadRef.current(page, search, category)
+    }, 2000)
+    return () => clearInterval(id)
+  }, [page, search, category])
+
   const goToPage = (p: number) => {
     setPage(p)
     load(p, search, category)
@@ -73,6 +84,23 @@ export function ProductsTable() {
       toast("Product deleted", "success")
     } catch (e: any) {
       toast(e.message || "Failed to delete", "error")
+    }
+  }
+
+  const handleToggleStock = async (product: any) => {
+    const newStock = product.stock > 0 ? 0 : 10
+    setOptimisticStock((prev) => ({ ...prev, [product.id]: newStock }))
+    try {
+      await api.products.update(product.id, { stock: newStock })
+      toast(newStock > 0 ? "Product marked in stock" : "Product marked out of stock", "success")
+      load(page, search, category)
+    } catch (e: any) {
+      setOptimisticStock((prev) => {
+        const next = { ...prev }
+        delete next[product.id]
+        return next
+      })
+      toast(e.message || "Failed to update stock", "error")
     }
   }
 
@@ -155,7 +183,7 @@ export function ProductsTable() {
 
       <div>
         {loading && !products.data.length ? (
-          <TableSkeleton rows={5} cols={isAdmin ? 7 : 6} />
+          <TableSkeleton rows={5} cols={isAdmin ? 8 : 7} />
         ) : (
           <>
             <div className="overflow-x-auto">
@@ -166,13 +194,16 @@ export function ProductsTable() {
                     <th className="px-6 py-3">Product</th>
                     <th className="px-6 py-3">Category</th>
                     <th className="px-6 py-3">Price</th>
-                    <th className="px-6 py-3">Stock</th>
+                    <th className="px-6 py-3">Qty</th>
+                    <th className="px-6 py-3">Status</th>
                     <th className="px-6 py-3">Created</th>
                     {isAdmin && <th className="px-6 py-3 text-right">Actions</th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {products.data.map((product: any, index: number) => (
+                  {products.data.map((product: any, index: number) => {
+                    const stockValue = optimisticStock[product.id] ?? product.stock
+                    return (
                     <tr key={product.id} className="h-10 border-b border-gray-200 dark:border-gray-700">
                       <td className="px-6 py-2.5 text-gray-400 dark:text-gray-500">{(page - 1) * 10 + index + 1}</td>
                       <td className="px-6 py-2.5">
@@ -185,7 +216,30 @@ export function ProductsTable() {
                         </span>
                       </td>
                       <td className="px-6 py-2.5 font-medium dark:text-gray-200">${Number(product.price).toFixed(2)}</td>
-                      <td className="px-6 py-2.5 dark:text-gray-300">{product.stock}</td>
+                      <td className="px-6 py-2.5 font-medium dark:text-gray-200">{stockValue}</td>
+                      <td className="px-6 py-2.5">
+                        <div className="flex items-center gap-2">
+                          {isAdmin && (
+                            <button
+                              onClick={() => handleToggleStock(product)}
+                              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors ${
+                                stockValue > 0 ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'
+                              }`}
+                            >
+                              <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                                stockValue > 0 ? 'translate-x-4' : 'translate-x-0.5'
+                              }`} />
+                            </button>
+                          )}
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            stockValue > 0
+                              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                              : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                          }`}>
+                            {stockValue > 0 ? 'In Stock' : 'Out of Stock'}
+                          </span>
+                        </div>
+                      </td>
                       <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{product.createdAt}</td>
                       {isAdmin && (
                         <td className="px-6 py-2.5 text-right">
@@ -198,7 +252,8 @@ export function ProductsTable() {
                         </td>
                       )}
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
