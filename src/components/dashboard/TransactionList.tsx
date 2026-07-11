@@ -6,6 +6,7 @@ import { api } from "@/lib/api"
 import { useDashboard } from "@/lib/store"
 import { useToast } from "@/lib/toast"
 import { Pagination } from "@/components/ui/Pagination"
+import { Modal } from "@/components/ui/Modal"
 
 const statusIcon: Record<string, any> = {
   completed: CheckCircle,
@@ -136,13 +137,17 @@ export function TransactionList() {
         </div>
       </div>
 
-      {(showForm || editing) && (
+      <Modal
+        open={showForm || !!editing}
+        onClose={() => { setShowForm(false); setEditing(null) }}
+        title={editing ? "Edit Transaction" : "Add Transaction"}
+      >
         <TransactionForm
           transaction={editing ? transactions.data.find((t: any) => t.id === editing) : null}
           onSave={handleSave}
           onCancel={() => { setShowForm(false); setEditing(null) }}
         />
-      )}
+      </Modal>
 
       <div>
         <table className="w-full text-sm">
@@ -254,7 +259,7 @@ function TransactionForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="border-b border-gray-200 bg-gray-50/50 p-6 dark:border-gray-700 dark:bg-gray-800/30">
+    <form onSubmit={handleSubmit}>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Customer *</label>

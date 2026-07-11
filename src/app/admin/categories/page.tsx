@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2 } from "lucide-react"
 import { api } from "@/lib/api"
 import { useDashboard } from "@/lib/store"
 import { useToast } from "@/lib/toast"
+import { Modal } from "@/components/ui/Modal"
 
 export default function CategoriesPage() {
   const { categories, setCategories } = useDashboard()
@@ -67,13 +68,17 @@ export default function CategoriesPage() {
         </button>
       </div>
 
-      {(showForm || editing) && (
+      <Modal
+        open={showForm || !!editing}
+        onClose={() => { setShowForm(false); setEditing(null) }}
+        title={editing ? "Edit Category" : "Add Category"}
+      >
         <CategoryForm
           category={editing ? categories.find((c: any) => c.id === editing) : null}
           onSave={handleSave}
           onCancel={() => { setShowForm(false); setEditing(null) }}
         />
-      )}
+      </Modal>
 
       <div>
         <table className="w-full text-sm">
@@ -135,7 +140,7 @@ function CategoryForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="border-b border-gray-200 bg-gray-50/50 p-6 dark:border-gray-700 dark:bg-gray-800/30">
+    <form onSubmit={handleSubmit}>
       <div className="flex items-end gap-4">
         <div className="flex-1">
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Category Name *</label>
