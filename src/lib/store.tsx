@@ -22,6 +22,9 @@ interface DashboardStore {
   transactions: EntityState
   categories: any[]
   recentTransactions: any[]
+  clientStats: any
+  clientRevenueData: any[]
+  clientName: string
   productPage: number
   customerPage: number
   transactionPage: number
@@ -63,6 +66,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactionsState] = useState<EntityState>(empty)
   const [categories, setCategories] = useState<any[]>([])
   const [recentTransactions, setRecentTransactions] = useState<any[]>([])
+  const [clientStats, setClientStats] = useState<any>({ totalSpent: 0, totalTransactions: 0, totalRevenue: 0, revenueChange: 0, ordersChange: 0 })
+  const [clientRevenueData, setClientRevenueData] = useState<any[]>([])
+  const [clientName, setClientName] = useState("")
   const [productPage, setProductPage] = useState(1)
   const [customerPage, setCustomerPage] = useState(1)
   const [transactionPage, setTransactionPage] = useState(1)
@@ -89,6 +95,20 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     } catch { /* silent */ }
   }, [])
 
+  const fetchClientStats = useCallback(async () => {
+    try {
+      const res = await fetch("/api/client/stats", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+      const data = await res.json()
+      if (data.stats) {
+        setClientStats(data.stats)
+        setClientRevenueData(data.revenueData || [])
+        setClientName(data.customerName || "")
+      }
+    } catch { /* silent */ }
+  }, [token])
+
   const refreshAll = useCallback(async () => {
     try {
       const [p, c, t, cat] = await Promise.all([
@@ -108,11 +128,13 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const notifyChange = useCallback(() => {
     refreshAll()
     refreshRecentTransactions()
-  }, [refreshAll, refreshRecentTransactions])
+    fetchClientStats()
+  }, [refreshAll, refreshRecentTransactions, fetchClientStats])
 
   useEffect(() => {
     refreshAll()
     refreshRecentTransactions()
+    fetchClientStats()
   }, [])
 
   useEffect(() => {
@@ -127,7 +149,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   return (
     <StoreContext.Provider value={{
       stats, revenueData, categoryRevenue, paymentMethods, dateRange, setDateRange: handleSetDateRange,
-      products, customers, transactions, categories, recentTransactions,
+      products, customers, transactions, categories, recentTransactions, clientStats, clientRevenueData, clientName,
       productPage, customerPage, transactionPage,
       productSearch, customerSearch, transactionSearch,
       productCategory, transactionFilter,

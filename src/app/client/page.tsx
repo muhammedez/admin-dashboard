@@ -1,7 +1,5 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useAuth } from "@/lib/auth"
 import { useDashboard } from "@/lib/store"
 import { StatCard } from "@/components/dashboard/StatCard"
 import { RevenueChart } from "@/components/dashboard/RevenueChart"
@@ -9,25 +7,13 @@ import { SalesFeed } from "@/components/dashboard/SalesFeed"
 import { DollarSign, ShoppingCart, Package } from "lucide-react"
 
 export default function ClientDashboard() {
-  const { token } = useAuth()
-  const { stats: globalStats } = useDashboard()
-  const [stats, setStats] = useState<any>(null)
+  const { stats: globalStats, clientStats, clientRevenueData, clientName } = useDashboard()
 
-  useEffect(() => {
-    if (!token) return
-    fetch("/api/client/stats", { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
-      .then((data) => setStats(data))
-      .catch(() => {})
-  }, [token])
-
-  const cards = stats
-    ? [
-        { title: "My Spending", value: `$${stats.stats.totalSpent.toLocaleString()}`, change: stats.stats.revenueChange, icon: DollarSign },
-        { title: "My Orders", value: stats.stats.totalTransactions.toString(), change: stats.stats.ordersChange, icon: ShoppingCart },
-        { title: "Products Available", value: globalStats.totalProducts.toString(), change: globalStats.productsChange, icon: Package },
-      ]
-    : []
+  const cards = [
+    { title: "My Spending", value: `$${(clientStats.totalSpent || 0).toLocaleString()}`, change: clientStats.revenueChange || 0, icon: DollarSign },
+    { title: "My Orders", value: (clientStats.totalTransactions || 0).toString(), change: clientStats.ordersChange || 0, icon: ShoppingCart },
+    { title: "Products Available", value: globalStats.totalProducts.toString(), change: globalStats.productsChange, icon: Package },
+  ]
 
   return (
     <div className="space-y-6">
@@ -42,9 +28,9 @@ export default function ClientDashboard() {
       </div>
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <RevenueChart data={stats?.revenueData || []} />
+          <RevenueChart data={clientRevenueData} />
         </div>
-        {stats && <SalesFeed customerName={stats.customerName} />}
+        {clientName && <SalesFeed customerName={clientName} />}
       </div>
     </div>
   )
