@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Plus, Pencil, Trash2, Search, X } from "lucide-react"
 import { api } from "@/lib/api"
 import { useDashboard } from "@/lib/store"
@@ -10,6 +10,8 @@ import { useSearchParams } from "next/navigation"
 import { Pagination } from "@/components/ui/Pagination"
 import { Modal } from "@/components/ui/Modal"
 import { TableSkeleton } from "@/components/ui/Skeleton"
+import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
+import { useModalState } from "@/hooks/useModalState"
 
 export function ProductsTable() {
   const { products, productPage, productSearch, productCategory, setProducts, categories } = useDashboard()
@@ -20,11 +22,8 @@ export function ProductsTable() {
   const [search, setSearch] = useState(productSearch)
   const [category, setCategory] = useState(productCategory)
   const [page, setPage] = useState(productPage || 1)
-  const [editing, setEditing] = useState<string | null>(null)
-  const [showForm, setShowForm] = useState(false)
+  const modal = useModalState<string>()
   const categoryNames = categories.map((c: any) => c.name)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const skipNextDebounce = useRef(false)
   const { toast } = useToast()
 
   const load = useCallback(async (p: number, q: string, cat: string) => {
@@ -41,10 +40,15 @@ export function ProductsTable() {
     setLoading(false)
   }, [setProducts])
 
+  const { skipNext } = useDebouncedSearch(() => {
+    setPage(1)
+    load(1, search, category)
+  }, [search, category])
+
   useEffect(() => {
     const q = searchParams.get("search") || ""
     if (q) {
-      skipNextDebounce.current = true
+      skipNext()
       setSearch(q)
       load(1, q, category)
     } else if (!products.data.length) {
@@ -53,16 +57,6 @@ export function ProductsTable() {
       setLoading(false)
     }
   }, [])
-
-  useEffect(() => {
-    if (skipNextDebounce.current) { skipNextDebounce.current = false; return }
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      setPage(1)
-      load(1, search, category)
-    }, 300)
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
-  }, [search, category])
 
   const goToPage = (p: number) => {
     setPage(p)
@@ -83,14 +77,14 @@ export function ProductsTable() {
 
   const handleSave = async (product: any) => {
     try {
-      if (editing) {
-        await api.products.update(editing, product)
-        setEditing(null)
+      if (modal.editingId) {
+        await api.products.update(modal.editingId, product)
+        modal.close()
         toast("Product updated", "success")
         load(page, search, category)
       } else {
         await api.products.create(product)
-        setShowForm(false)
+        modal.close()
         toast("Product created", "success")
         goToPage(1)
       }
@@ -134,7 +128,7 @@ export function ProductsTable() {
           </select>
           {isAdmin && (
             <button
-              onClick={() => { setShowForm(true); setEditing(null) }}
+              onClick={modal.openAdd}
               className="flex items-center gap-1.5 bg-emerald-600 px-4 py-1.5 text-sm font-medium !text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600"
             >
               <Plus className="h-4 w-4" /> Add
@@ -144,15 +138,15 @@ export function ProductsTable() {
       </div>
 
       <Modal
-        open={showForm || !!editing}
-        onClose={() => { setShowForm(false); setEditing(null) }}
-        title={editing ? "Edit Product" : "Add Product"}
+        open={modal.isOpen}
+        onClose={modal.close}
+        title={modal.editingId ? "Edit Product" : "Add Product"}
       >
         <ProductForm
           categories={categoryNames}
-          product={editing ? products.data.find((p: any) => p.id === editing) : null}
+          product={modal.editingId ? products.data.find((p: any) => p.id === modal.editingId) : null}
           onSave={handleSave}
-          onCancel={() => { setShowForm(false); setEditing(null) }}
+          onCancel={modal.close}
         />
       </Modal>
 
@@ -192,7 +186,7 @@ export function ProductsTable() {
                       <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{product.createdAt}</td>
                       {isAdmin && (
                         <td className="px-6 py-2.5 text-right">
-                          <button onClick={() => setEditing(product.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
+                          <button onClick={() => modal.openEdit(product.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
                             <Pencil className="h-4 w-4" />
                           </button>
                           <button onClick={() => handleDelete(product.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { CheckCircle, Clock, XCircle, Search, Filter, Plus, Pencil, Trash2, X } from "lucide-react"
 import { api } from "@/lib/api"
 import { useDashboard } from "@/lib/store"
@@ -10,6 +10,8 @@ import { useSearchParams } from "next/navigation"
 import { Pagination } from "@/components/ui/Pagination"
 import { Modal } from "@/components/ui/Modal"
 import { TableSkeleton } from "@/components/ui/Skeleton"
+import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
+import { useModalState } from "@/hooks/useModalState"
 
 const statusIcon: Record<string, any> = {
   completed: CheckCircle,
@@ -32,10 +34,7 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
   const [search, setSearch] = useState(transactionSearch)
   const [filter, setFilter] = useState(transactionFilter)
   const [page, setPage] = useState(transactionPage || 1)
-  const [editing, setEditing] = useState<string | null>(null)
-  const [showForm, setShowForm] = useState(false)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const skipNextDebounce = useRef(false)
+  const modal = useModalState<string>()
   const { toast } = useToast()
 
   const load = useCallback(async (p: number, q: string, f: string) => {
@@ -64,26 +63,21 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
     setLoading(false)
   }, [setTransactions, isAdmin])
 
+  const { skipNext } = useDebouncedSearch(() => {
+    setPage(1)
+    load(1, search, filter)
+  }, [search, filter])
+
   useEffect(() => {
     const q = searchParams.get("search") || ""
     if (q) {
-      skipNextDebounce.current = true
+      skipNext()
       setSearch(q)
       load(1, q, filter)
     } else {
       load(page, search, filter)
     }
   }, [filterCustomer])
-
-  useEffect(() => {
-    if (skipNextDebounce.current) { skipNextDebounce.current = false; return }
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      setPage(1)
-      load(1, search, filter)
-    }, 300)
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
-  }, [search, filter])
 
   const goToPage = (p: number) => {
     setPage(p)
@@ -104,14 +98,14 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
 
   const handleSave = async (formData: any) => {
     try {
-      if (editing) {
-        await api.transactions.update(editing, formData)
-        setEditing(null)
+      if (modal.editingId) {
+        await api.transactions.update(modal.editingId, formData)
+        modal.close()
         toast("Transaction updated", "success")
         goToPage(page)
       } else {
         await api.transactions.create(formData)
-        setShowForm(false)
+        modal.close()
         toast("Transaction created", "success")
         goToPage(1)
       }
@@ -158,7 +152,7 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
           </div>
           {isAdmin && (
             <button
-              onClick={() => { setShowForm(true); setEditing(null) }}
+              onClick={modal.openAdd}
               className="flex items-center gap-1.5 bg-emerald-600 px-4 py-1.5 text-sm font-medium !text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600"
             >
               <Plus className="h-4 w-4" /> Add
@@ -168,14 +162,14 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
       </div>
 
       <Modal
-        open={showForm || !!editing}
-        onClose={() => { setShowForm(false); setEditing(null) }}
-        title={editing ? "Edit Transaction" : "Add Transaction"}
+        open={modal.isOpen}
+        onClose={modal.close}
+        title={modal.editingId ? "Edit Transaction" : "Add Transaction"}
       >
         <TransactionForm
-          transaction={editing ? transactions.data.find((t: any) => t.id === editing) : null}
+          transaction={modal.editingId ? transactions.data.find((t: any) => t.id === modal.editingId) : null}
           onSave={handleSave}
-          onCancel={() => { setShowForm(false); setEditing(null) }}
+          onCancel={modal.close}
         />
       </Modal>
 
@@ -221,7 +215,7 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
                         </td>
                         {isAdmin && (
                         <td className="px-6 py-2.5 text-right whitespace-nowrap">
-                        <button onClick={() => setEditing(tx.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
+                          <button onClick={() => modal.openEdit(tx.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
                           <Pencil className="h-4 w-4" />
                         </button>
                         <button onClick={() => handleDelete(tx.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">

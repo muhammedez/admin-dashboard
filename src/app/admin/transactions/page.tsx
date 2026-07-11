@@ -1,24 +1,12 @@
 "use client"
 
-import { useState } from "react"
 import { TransactionList } from "@/components/dashboard/TransactionList"
 import { Download } from "lucide-react"
 import { api } from "@/lib/api"
-import { downloadCSV } from "@/lib/csv"
+import { useExportCSV } from "@/hooks/useExportCSV"
 
 export default function AdminTransactions() {
-  const [exporting, setExporting] = useState(false)
-
-  const handleExport = async () => {
-    setExporting(true)
-    try {
-      const result = await api.transactions.list({ limit: 9999 })
-      downloadCSV(result.data, "transactions")
-    } catch (e: any) {
-      alert(e.message || "Export failed")
-    }
-    setExporting(false)
-  }
+  const { exporting, handleExport } = useExportCSV(() => api.transactions.list({ limit: 9999 }), "transactions")
 
   return (
     <div className="space-y-6">

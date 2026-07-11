@@ -8,13 +8,13 @@ import { useDashboard } from "@/lib/store"
 import { useToast } from "@/lib/toast"
 import { Modal } from "@/components/ui/Modal"
 import { TableSkeleton } from "@/components/ui/Skeleton"
+import { useModalState } from "@/hooks/useModalState"
 
 export default function CategoriesPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === "admin"
   const { categories, setCategories } = useDashboard()
-  const [editing, setEditing] = useState<string | null>(null)
-  const [showForm, setShowForm] = useState(false)
+  const modal = useModalState<string>()
   const { toast } = useToast()
 
   const load = async () => {
@@ -26,15 +26,14 @@ export default function CategoriesPage() {
 
   const handleSave = async (name: string) => {
     try {
-      if (editing) {
-        await api.categories.update(editing, { name })
+      if (modal.editingId) {
+        await api.categories.update(modal.editingId, { name })
         toast("Category updated", "success")
       } else {
         await api.categories.create({ name })
         toast("Category created", "success")
       }
-      setEditing(null)
-      setShowForm(false)
+      modal.close()
       load()
     } catch (e: any) {
       toast(e.message || "Failed to save", "error")
@@ -66,7 +65,7 @@ export default function CategoriesPage() {
           </div>
         {isAdmin && (
           <button
-            onClick={() => { setShowForm(true); setEditing(null) }}
+            onClick={modal.openAdd}
             className="flex items-center gap-1.5 bg-emerald-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600"
           >
             <Plus className="h-4 w-4" /> Add Category
@@ -75,14 +74,14 @@ export default function CategoriesPage() {
       </div>
 
       <Modal
-        open={showForm || !!editing}
-        onClose={() => { setShowForm(false); setEditing(null) }}
-        title={editing ? "Edit Category" : "Add Category"}
+        open={modal.isOpen}
+        onClose={modal.close}
+        title={modal.editingId ? "Edit Category" : "Add Category"}
       >
         <CategoryForm
-          category={editing ? categories.find((c: any) => c.id === editing) : null}
+          category={modal.editingId ? categories.find((c: any) => c.id === modal.editingId) : null}
           onSave={handleSave}
-          onCancel={() => { setShowForm(false); setEditing(null) }}
+          onCancel={modal.close}
         />
       </Modal>
 
@@ -111,7 +110,7 @@ export default function CategoriesPage() {
                       <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{cat.createdAt}</td>
                       {isAdmin && (
                         <td className="px-6 py-2.5 text-right">
-                          <button onClick={() => setEditing(cat.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
+                          <button onClick={() => modal.openEdit(cat.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
                             <Pencil className="h-4 w-4" />
                           </button>
                           <button onClick={() => handleDelete(cat.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">
