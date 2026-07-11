@@ -56,16 +56,49 @@ export async function GET(request: NextRequest) {
     GROUP BY paymentMethod ORDER BY count DESC
   `).all(...tf.params) as any[]
 
+  const calcChange = (current: number, previous: number) => {
+    if (!previous) return current > 0 ? 100 : 0
+    return Math.round(((current - previous) / previous) * 1000) / 10
+  }
+
+  let prevRevenue = totalRevenue || 1
+  let prevTxCount = txCount || 1
+  let prevCustomerCount = customerCount || 1
+  let prevProductCount = productCount || 1
+
+  if (from) {
+    const rangeLen = to ? new Date(to).getTime() - new Date(from).getTime() : 7 * 86400000
+    const prevFrom = new Date(new Date(from).getTime() - rangeLen - 86400000).toISOString().split("T")[0]
+    const prevTo = new Date(new Date(from).getTime() - 86400000).toISOString().split("T")[0]
+
+    const prevProductFilter = `createdAt >= ? AND createdAt <= ?`
+    const prevTxFilter = `timestamp >= ? AND timestamp <= ?`
+    const prevCustFilter = `joinedAt >= ? AND joinedAt <= ?`
+    const prevParams = [prevFrom, prevTo + "T23:59:59"]
+
+    const pc = db.prepare(`SELECT COUNT(*) as c FROM products WHERE ${prevProductFilter}`).get(...prevParams) as any
+    prevProductCount = pc.c || 1
+
+    const tc = db.prepare(`SELECT COUNT(*) as c FROM transactions WHERE status = 'completed' AND ${prevTxFilter}`).get(...prevParams) as any
+    prevTxCount = tc.c || 1
+
+    const rv = db.prepare(`SELECT COALESCE(SUM(amount),0) as s FROM transactions WHERE status = 'completed' AND ${prevTxFilter}`).get(...prevParams) as any
+    prevRevenue = rv.s || 1
+
+    const cc = db.prepare(`SELECT COUNT(*) as c FROM customers WHERE status = 'active' AND ${prevCustFilter}`).get(...prevParams) as any
+    prevCustomerCount = cc.c || 1
+  }
+
   return NextResponse.json({
     stats: {
       totalRevenue,
       totalTransactions: txCount,
       activeCustomers: customerCount,
       totalProducts: productCount,
-      revenueChange: 12.5,
-      transactionsChange: 8.3,
-      customersChange: 5.2,
-      productsChange: 0,
+      revenueChange: totalRevenue ? calcChange(totalRevenue, prevRevenue) : 0,
+      transactionsChange: txCount ? calcChange(txCount, prevTxCount) : 0,
+      customersChange: customerCount ? calcChange(customerCount, prevCustomerCount) : 0,
+      productsChange: productCount ? calcChange(productCount, prevProductCount) : 0,
     },
     revenueData,
     categoryRevenue: categoryRows,

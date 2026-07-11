@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Bell, Search, Moon, Sun, LogOut, Menu } from "lucide-react"
+import { Bell, Moon, Sun, LogOut, Menu } from "lucide-react"
 import { useTheme } from "@/lib/theme"
 import { useAuth } from "@/lib/auth"
 import { useSidebar } from "@/lib/sidebar"
@@ -25,15 +25,6 @@ export function Header() {
       <button onClick={toggleSidebar} className="p-2 hover:bg-gray-50 dark:hover:bg-gray-800 lg:hidden" title="Toggle sidebar">
         <Menu className="h-5 w-5 text-gray-600 dark:text-gray-400" />
       </button>
-
-      <div className="relative flex-1 max-w-md">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-        <input
-          type="text"
-          placeholder="Search..."
-          className="w-full border border-gray-200 bg-gray-50 py-2 pl-10 pr-4 text-sm outline-none focus:border-gray-900 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-500 dark:focus:border-gray-400"
-        />
-      </div>
 
       <div className="ml-auto" />
 

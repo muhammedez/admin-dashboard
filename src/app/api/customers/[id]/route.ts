@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { getDb } from "@/lib/db"
+import { requireAdmin } from "@/lib/api-auth"
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -10,6 +11,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 }
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const session = requireAdmin(request)
+  if (session instanceof NextResponse) return session
   const { id } = await params
   const body = await request.json()
   const db = getDb()
@@ -39,7 +42,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   return NextResponse.json(updated)
 }
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const session = requireAdmin(request)
+  if (session instanceof NextResponse) return session
   const { id } = await params
   const db = getDb()
   const existing = db.prepare("SELECT * FROM customers WHERE id = ?").get(id)

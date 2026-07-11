@@ -3,11 +3,15 @@
 import { useState } from "react"
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import { api } from "@/lib/api"
+import { useAuth } from "@/lib/auth"
 import { useDashboard } from "@/lib/store"
 import { useToast } from "@/lib/toast"
 import { Modal } from "@/components/ui/Modal"
+import { TableSkeleton } from "@/components/ui/Skeleton"
 
 export default function CategoriesPage() {
+  const { user } = useAuth()
+  const isAdmin = user?.role === "admin"
   const { categories, setCategories } = useDashboard()
   const [editing, setEditing] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
@@ -60,12 +64,14 @@ export default function CategoriesPage() {
             <h3 className="text-lg font-semibold dark:text-gray-100">Categories</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">{categories.length} categories</p>
           </div>
-        <button
-          onClick={() => { setShowForm(true); setEditing(null) }}
-          className="flex items-center gap-1.5 bg-emerald-600 px-4 py-1.5 text-sm font-medium !text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600"
-        >
-          <Plus className="h-4 w-4" /> Add Category
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => { setShowForm(true); setEditing(null) }}
+            className="flex items-center gap-1.5 bg-emerald-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600"
+          >
+            <Plus className="h-4 w-4" /> Add Category
+          </button>
+        )}
       </div>
 
       <Modal
@@ -81,37 +87,45 @@ export default function CategoriesPage() {
       </Modal>
 
       <div>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="h-10 border-b border-gray-200 text-left text-xs font-medium text-gray-400 dark:border-gray-800 dark:text-gray-500">
-              <th className="px-6 py-3 w-10">No.</th>
-              <th className="px-6 py-3">Name</th>
-              <th className="px-6 py-3">Created</th>
-              <th className="px-6 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {categories.map((cat: any, index: number) => (
-              <tr key={cat.id} className="h-10 border-b border-gray-200 dark:border-gray-800">
-                <td className="px-6 py-2.5 text-gray-400 dark:text-gray-500">{index + 1}</td>
-                <td className="px-6 py-2.5">
-                  <span className="font-medium dark:text-gray-200">{cat.name}</span>
-                </td>
-                <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{cat.createdAt}</td>
-                <td className="px-6 py-2.5 text-right">
-                  <button onClick={() => setEditing(cat.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                  <button onClick={() => handleDelete(cat.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {!categories.length && (
-          <p className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">No categories found</p>
+        {!categories.length ? (
+          <TableSkeleton rows={3} cols={isAdmin ? 4 : 3} />
+        ) : (
+          <>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="h-10 border-b border-gray-200 text-left text-xs font-medium text-gray-400 dark:border-gray-700 dark:text-gray-500">
+                  <th className="px-6 py-3 w-10">No.</th>
+                  <th className="px-6 py-3">Name</th>
+                  <th className="px-6 py-3">Created</th>
+                  {isAdmin && <th className="px-6 py-3 text-right">Actions</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {categories.map((cat: any, index: number) => (
+                  <tr key={cat.id} className="h-10 border-b border-gray-200 dark:border-gray-700">
+                    <td className="px-6 py-2.5 text-gray-400 dark:text-gray-500">{index + 1}</td>
+                    <td className="px-6 py-2.5">
+                      <span className="font-medium dark:text-gray-200">{cat.name}</span>
+                    </td>
+                    <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{cat.createdAt}</td>
+                    {isAdmin && (
+                      <td className="px-6 py-2.5 text-right">
+                        <button onClick={() => setEditing(cat.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => handleDelete(cat.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {!categories.length && (
+              <p className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">No categories found</p>
+            )}
+          </>
         )}
       </div>
     </div>

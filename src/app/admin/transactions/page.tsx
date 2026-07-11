@@ -14,7 +14,9 @@ export default function AdminTransactions() {
     try {
       const result = await api.transactions.list({ limit: 9999 })
       downloadCSV(result.data, "transactions")
-    } catch { /* silent */ }
+    } catch (e: any) {
+      alert(e.message || "Export failed")
+    }
     setExporting(false)
   }
 

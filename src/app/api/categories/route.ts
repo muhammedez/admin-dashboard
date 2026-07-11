@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { getDb } from "@/lib/db"
+import { requireAdmin } from "@/lib/api-auth"
 import type { NextRequest } from "next/server"
 
 export async function GET() {
@@ -9,6 +10,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const session = requireAdmin(request)
+  if (session instanceof NextResponse) return session
   const body = await request.json()
   const { name } = body
 

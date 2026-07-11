@@ -1,8 +1,19 @@
 import { NextResponse } from "next/server"
 import { getDb } from "@/lib/db"
+import { requireAdmin } from "@/lib/api-auth"
 import type { NextRequest } from "next/server"
 
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const db = getDb()
+  const category = db.prepare("SELECT * FROM categories WHERE id = ?").get(id)
+  if (!category) return NextResponse.json({ error: "Not found" }, { status: 404 })
+  return NextResponse.json(category)
+}
+
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const session = requireAdmin(request)
+  if (session instanceof NextResponse) return session
   const { id } = await params
   const body = await request.json()
   const { name } = body
@@ -26,6 +37,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(request: NextRequest) {
+  const session = requireAdmin(request)
+  if (session instanceof NextResponse) return session
   const { searchParams } = new URL(request.url)
   const id = searchParams.get("id")
   if (!id) {

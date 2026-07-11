@@ -14,7 +14,9 @@ export default function AdminCustomers() {
     try {
       const result = await api.customers.list({ limit: 9999 })
       downloadCSV(result.data, "customers")
-    } catch { /* silent */ }
+    } catch (e: any) {
+      alert(e.message || "Export failed")
+    }
     setExporting(false)
   }
 

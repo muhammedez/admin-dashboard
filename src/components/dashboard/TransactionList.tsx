@@ -1,12 +1,15 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import { CheckCircle, Clock, XCircle, Search, Filter, Plus, Pencil, Trash2 } from "lucide-react"
+import { CheckCircle, Clock, XCircle, Search, Filter, Plus, Pencil, Trash2, X } from "lucide-react"
 import { api } from "@/lib/api"
 import { useDashboard } from "@/lib/store"
+import { useAuth } from "@/lib/auth"
 import { useToast } from "@/lib/toast"
+import { useSearchParams } from "next/navigation"
 import { Pagination } from "@/components/ui/Pagination"
 import { Modal } from "@/components/ui/Modal"
+import { TableSkeleton } from "@/components/ui/Skeleton"
 
 const statusIcon: Record<string, any> = {
   completed: CheckCircle,
@@ -22,6 +25,9 @@ const statusBg: Record<string, string> = {
 
 export function TransactionList() {
   const { transactions, transactionPage, transactionSearch, transactionFilter, setTransactions } = useDashboard()
+  const { user } = useAuth()
+  const isAdmin = user?.role === "admin"
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState(transactionSearch)
   const [filter, setFilter] = useState(transactionFilter)
@@ -29,6 +35,7 @@ export function TransactionList() {
   const [editing, setEditing] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const skipNextDebounce = useRef(false)
   const { toast } = useToast()
 
   const load = useCallback(async (p: number, q: string, f: string) => {
@@ -46,7 +53,12 @@ export function TransactionList() {
   }, [setTransactions])
 
   useEffect(() => {
-    if (!transactions.data.length) {
+    const q = searchParams.get("search") || ""
+    if (q) {
+      skipNextDebounce.current = true
+      setSearch(q)
+      load(1, q, filter)
+    } else if (!transactions.data.length) {
       load(page, search, filter)
     } else {
       setLoading(false)
@@ -54,6 +66,7 @@ export function TransactionList() {
   }, [])
 
   useEffect(() => {
+    if (skipNextDebounce.current) { skipNextDebounce.current = false; return }
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       setPage(1)
@@ -112,8 +125,13 @@ export function TransactionList() {
               placeholder="Search transactions..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-48 border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-3 text-sm outline-none focus:border-gray-900 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-500 dark:focus:border-gray-400"
+              className="w-48 border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-8 text-sm outline-none focus:border-gray-900 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-500 dark:focus:border-gray-400"
             />
+            {search && (
+              <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
           <div className="relative">
             <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
@@ -128,12 +146,14 @@ export function TransactionList() {
               <option value="failed">Failed</option>
             </select>
           </div>
-          <button
-            onClick={() => { setShowForm(true); setEditing(null) }}
-            className="flex items-center gap-1.5 bg-emerald-600 px-4 py-1.5 text-sm font-medium !text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600"
-          >
-            <Plus className="h-4 w-4" /> Add
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => { setShowForm(true); setEditing(null) }}
+              className="flex items-center gap-1.5 bg-emerald-600 px-4 py-1.5 text-sm font-medium !text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600"
+            >
+              <Plus className="h-4 w-4" /> Add
+            </button>
+          )}
         </div>
       </div>
 
@@ -150,55 +170,63 @@ export function TransactionList() {
       </Modal>
 
       <div>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="h-10 border-b border-gray-200 text-left text-xs font-medium text-gray-400 dark:border-gray-800 dark:text-gray-500">
-              <th className="px-6 py-3 w-10">No.</th>
-              <th className="px-6 py-3">Transaction</th>
-              <th className="px-6 py-3">Customer</th>
-              <th className="px-6 py-3">Product</th>
-              <th className="px-6 py-3">Amount</th>
-              <th className="px-6 py-3">Status</th>
-              <th className="px-6 py-3">Payment</th>
-              <th className="px-6 py-3">Time</th>
-              <th className="px-6 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.data.map((tx: any, index: number) => {
-              const StatusIcon = statusIcon[tx.status] || statusIcon.completed
-              return (
-                <tr key={tx.id} className="h-10 border-b border-gray-200 dark:border-gray-800">
-                  <td className="px-6 py-2.5 text-gray-400 dark:text-gray-500">{(page - 1) * 10 + index + 1}</td>
-                  <td className="px-6 py-2.5 font-medium dark:text-gray-200">{tx.id}</td>
-                  <td className="px-6 py-2.5 dark:text-gray-300">{tx.customerName}</td>
-                  <td className="px-6 py-2.5 text-gray-600 dark:text-gray-400">{tx.productName}</td>
-                  <td className="px-6 py-2.5 font-medium dark:text-gray-200">${Number(tx.amount).toFixed(2)}</td>
-                  <td className="px-6 py-2.5">
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium ${statusBg[tx.status]}`}>
-                      <StatusIcon className="h-3.5 w-3.5" />
-                      {tx.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{tx.paymentMethod}</td>
-                  <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                    {new Date(tx.timestamp).toLocaleString()}
-                  </td>
-                  <td className="px-6 py-2.5 text-right whitespace-nowrap">
-                  <button onClick={() => setEditing(tx.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                  <button onClick={() => handleDelete(tx.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                  </td>
+        {loading && !transactions.data.length ? (
+          <TableSkeleton rows={5} cols={isAdmin ? 9 : 8} />
+        ) : (
+          <>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="h-10 border-b border-gray-200 text-left text-xs font-medium text-gray-400 dark:border-gray-700 dark:text-gray-500">
+                  <th className="px-6 py-3 w-10">No.</th>
+                  <th className="px-6 py-3">Transaction</th>
+                  <th className="px-6 py-3">Customer</th>
+                  <th className="px-6 py-3">Product</th>
+                  <th className="px-6 py-3">Amount</th>
+                  <th className="px-6 py-3">Status</th>
+                  <th className="px-6 py-3">Payment</th>
+                  <th className="px-6 py-3">Time</th>
+                  {isAdmin && <th className="px-6 py-3 text-right">Actions</th>}
                 </tr>
-              )
-            })}
-          </tbody>
-        </table>
-        {!loading && !transactions.data.length && (
-          <p className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">No transactions found</p>
+              </thead>
+              <tbody>
+                {transactions.data.map((tx: any, index: number) => {
+                  const StatusIcon = statusIcon[tx.status] || statusIcon.completed
+                  return (
+                    <tr key={tx.id} className="h-10 border-b border-gray-200 dark:border-gray-700">
+                      <td className="px-6 py-2.5 text-gray-400 dark:text-gray-500">{(page - 1) * 10 + index + 1}</td>
+                      <td className="px-6 py-2.5 font-medium dark:text-gray-200">{tx.id}</td>
+                      <td className="px-6 py-2.5 dark:text-gray-300">{tx.customerName}</td>
+                      <td className="px-6 py-2.5 text-gray-600 dark:text-gray-400">{tx.productName}</td>
+                      <td className="px-6 py-2.5 font-medium dark:text-gray-200">${Number(tx.amount).toFixed(2)}</td>
+                      <td className="px-6 py-2.5">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium ${statusBg[tx.status]}`}>
+                          <StatusIcon className="h-3.5 w-3.5" />
+                          {tx.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{tx.paymentMethod}</td>
+                      <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                        {new Date(tx.timestamp).toLocaleString()}
+                      </td>
+                      {isAdmin && (
+                      <td className="px-6 py-2.5 text-right whitespace-nowrap">
+                      <button onClick={() => setEditing(tx.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button onClick={() => handleDelete(tx.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                      </td>
+                      )}
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+            {!loading && !transactions.data.length && (
+              <p className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">No transactions found</p>
+            )}
+          </>
         )}
       </div>
 

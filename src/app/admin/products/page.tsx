@@ -14,7 +14,9 @@ export default function AdminProducts() {
     try {
       const result = await api.products.list({ limit: 9999 })
       downloadCSV(result.data, "products")
-    } catch { /* silent */ }
+    } catch (e: any) {
+      alert(e.message || "Export failed")
+    }
     setExporting(false)
   }
 
