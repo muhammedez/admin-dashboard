@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from "react"
 import { api, setApiToken } from "./api"
 import { useAuth } from "./auth"
 
@@ -156,20 +156,42 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setDateRange(range)
   }, [])
 
+  const handleSetProducts = useCallback((state: EntityState, page: number, search: string, category: string) => {
+    setProductsState(state); setProductPage(page); setProductSearch(search); setProductCategory(category)
+  }, [])
+  const handleSetCustomers = useCallback((state: EntityState, page: number, search: string) => {
+    setCustomersState(state); setCustomerPage(page); setCustomerSearch(search)
+  }, [])
+  const handleSetTransactions = useCallback((state: EntityState, page: number, search: string, filter: string) => {
+    setTransactionsState(state); setTransactionPage(page); setTransactionSearch(search); setTransactionFilter(filter)
+  }, [])
+  const handleSetCategories = useCallback((data: any[]) => setCategories(data), [])
+
+  const ctx = useMemo(() => ({
+    stats, revenueData, categoryRevenue, paymentMethods, dateRange, setDateRange: handleSetDateRange,
+    products, customers, transactions, categories, recentTransactions, clientStats, clientRevenueData, clientName, clientTotalProducts,
+    productPage, customerPage, transactionPage,
+    productSearch, customerSearch, transactionSearch,
+    productCategory, transactionFilter,
+    setProducts: handleSetProducts,
+    setCustomers: handleSetCustomers,
+    setTransactions: handleSetTransactions,
+    setCategories: handleSetCategories,
+    refreshRecentTransactions,
+    notifyChange,
+  }), [
+    stats, revenueData, categoryRevenue, paymentMethods, dateRange,
+    products, customers, transactions, categories, recentTransactions,
+    clientStats, clientRevenueData, clientName, clientTotalProducts,
+    productPage, customerPage, transactionPage,
+    productSearch, customerSearch, transactionSearch,
+    productCategory, transactionFilter,
+    handleSetDateRange, handleSetProducts, handleSetCustomers, handleSetTransactions, handleSetCategories,
+    refreshRecentTransactions, notifyChange,
+  ])
+
   return (
-    <StoreContext.Provider value={{
-      stats, revenueData, categoryRevenue, paymentMethods, dateRange, setDateRange: handleSetDateRange,
-      products, customers, transactions, categories, recentTransactions, clientStats, clientRevenueData, clientName, clientTotalProducts,
-      productPage, customerPage, transactionPage,
-      productSearch, customerSearch, transactionSearch,
-      productCategory, transactionFilter,
-      setProducts: (state, page, search, category) => { setProductsState(state); setProductPage(page); setProductSearch(search); setProductCategory(category) },
-      setCustomers: (state, page, search) => { setCustomersState(state); setCustomerPage(page); setCustomerSearch(search) },
-      setTransactions: (state, page, search, filter) => { setTransactionsState(state); setTransactionPage(page); setTransactionSearch(search); setTransactionFilter(filter) },
-      setCategories: (data) => setCategories(data),
-      refreshRecentTransactions,
-      notifyChange,
-    }}>
+    <StoreContext.Provider value={ctx}>
       {children}
     </StoreContext.Provider>
   )

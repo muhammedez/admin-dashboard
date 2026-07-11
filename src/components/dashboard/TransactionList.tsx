@@ -255,6 +255,7 @@ function TransactionForm({
 }) {
   const [customers, setCustomers] = useState<any[]>([])
   const [products, setProducts] = useState<any[]>([])
+  const [stockWarning, setStockWarning] = useState("")
   const [form, setForm] = useState(
     transaction ? { ...transaction, amount: String(transaction.amount), quantity: String(transaction.quantity || 1) } : { customerName: "", productName: "", quantity: "1", amount: "", status: "completed", paymentMethod: "Credit Card" }
   )
@@ -265,13 +266,25 @@ function TransactionForm({
     api.products.list({ limit: 100 }).then((r) => setProducts(r.data)).catch(() => {})
   }, [])
 
+  const selectedProduct = products.find((p: any) => p.name === form.productName)
+
+  const checkStock = (product: any, qty: number) => {
+    if (product && qty > product.stock) {
+      setStockWarning(`Only ${product.stock} available in stock`)
+    } else {
+      setStockWarning("")
+    }
+  }
+
   const handleProductChange = (productName: string) => {
     const product = products.find((p: any) => p.name === productName)
     if (product) {
-      const qty = form.quantity || 1
+      const qty = parseInt(form.quantity, 10) || 1
       setForm({ ...form, productName, amount: String((product.price * qty).toFixed(2)) })
+      checkStock(product, qty)
     } else {
       setForm({ ...form, productName })
+      setStockWarning("")
     }
   }
 
@@ -282,6 +295,7 @@ function TransactionForm({
       const product = products.find((p: any) => p.name === form.productName)
       if (product) {
         setForm((prev: any) => ({ ...prev, amount: (product.price * qty).toFixed(2) }))
+        checkStock(product, qty)
       }
     }
   }
@@ -314,9 +328,12 @@ function TransactionForm({
             className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm outline-none ring-emerald-500/20 transition-all focus:border-emerald-500 focus:ring-2 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-emerald-400">
             <option value="">Select product</option>
             {products.map((p: any) => (
-              <option key={p.id} value={p.name}>${Number(p.price).toFixed(2)} — {p.name}</option>
+              <option key={p.id} value={p.name}>${Number(p.price).toFixed(2)} — {p.name} ({p.stock} left)</option>
             ))}
           </select>
+          {selectedProduct && (
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{selectedProduct.stock} available in stock</p>
+          )}
         </div>
         <div>
           <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Quantity</label>
@@ -347,12 +364,15 @@ function TransactionForm({
           </select>
         </div>
       </div>
+      {stockWarning && (
+        <p className="mt-4 text-sm text-red-600 dark:text-red-400">{stockWarning}</p>
+      )}
       <div className="mt-6 flex justify-start gap-3">
         <button type="button" onClick={onCancel}
           className="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
           Cancel
         </button>
-        <button disabled={saving} type="submit"
+        <button disabled={saving || !!stockWarning} type="submit"
           className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium !text-white shadow-sm transition-all hover:bg-emerald-700 disabled:opacity-50 dark:bg-emerald-500 dark:hover:bg-emerald-600">
           {saving ? "Saving..." : "Save"}
         </button>

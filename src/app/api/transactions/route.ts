@@ -43,19 +43,30 @@ export async function POST(request: Request) {
   const session = await requireAdmin(request)
   if (session instanceof NextResponse) return session
   const body = await request.json()
-  const { customerName, productName, amount, status, paymentMethod } = body
+  const { customerName, productName, amount, quantity, status, paymentMethod } = body
 
   if (!customerName || !productName || amount == null) {
     return NextResponse.json({ error: "customerName, productName, and amount are required" }, { status: 400 })
   }
 
   const db = await getDb()
+  const qty = Math.max(1, parseInt(quantity, 10) || 1)
+
+  const product = await db.prepare("SELECT * FROM products WHERE name = ?").get(productName) as any
+  if (product && product.stock < qty) {
+    return NextResponse.json({ error: `Insufficient stock. Only ${product.stock} available for ${productName}` }, { status: 400 })
+  }
+
   const id = `T-${Date.now()}`
   const timestamp = new Date().toISOString()
 
   await db.prepare(
     "INSERT INTO transactions (id, customerName, productName, amount, status, timestamp, paymentMethod) VALUES (?, ?, ?, ?, ?, ?, ?)"
   ).run(id, customerName, productName, amount, status ?? "completed", timestamp, paymentMethod ?? "Credit Card")
+
+  if (product) {
+    await db.prepare("UPDATE products SET stock = stock - ? WHERE name = ?").run(qty, productName)
+  }
 
   const customer = await db.prepare("SELECT * FROM customers WHERE name = ?").get(customerName) as any
   if (customer) {
