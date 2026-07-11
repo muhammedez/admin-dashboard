@@ -35,6 +35,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     if (!loading && !user) router.push("/login")
+    if (!loading && user && user.role === "admin") router.push("/admin")
   }, [user, loading, router])
 
   if (!user) return null
