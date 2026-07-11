@@ -3,34 +3,34 @@ import { getDb } from "@/lib/db"
 import { requireAdmin } from "@/lib/api-auth"
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = requireAdmin(request)
+  const session = await requireAdmin(request)
   if (session instanceof NextResponse) return session
 
   const { id } = await params
-  const db = getDb()
-  const customer = db.prepare("SELECT * FROM customers WHERE id = ?").get(id)
+  const db = await getDb()
+  const customer = await db.prepare("SELECT * FROM customers WHERE id = ?").get(id)
   if (!customer) return NextResponse.json({ error: "Not found" }, { status: 404 })
   return NextResponse.json(customer)
 }
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = requireAdmin(request)
+  const session = await requireAdmin(request)
   if (session instanceof NextResponse) return session
   const { id } = await params
   const body = await request.json()
-  const db = getDb()
+  const db = await getDb()
 
-  const existing = db.prepare("SELECT * FROM customers WHERE id = ?").get(id)
+  const existing = await db.prepare("SELECT * FROM customers WHERE id = ?").get(id)
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
   const { name, email, status, totalOrders, totalSpent } = body
 
   if (email && email !== (existing as any).email) {
-    const dup = db.prepare("SELECT id FROM customers WHERE email = ? AND id != ?").get(email, id)
+    const dup = await db.prepare("SELECT id FROM customers WHERE email = ? AND id != ?").get(email, id)
     if (dup) return NextResponse.json({ error: "Email already in use" }, { status: 409 })
   }
 
-  db.prepare(
+  await db.prepare(
     "UPDATE customers SET name = ?, email = ?, status = ?, totalOrders = ?, totalSpent = ? WHERE id = ?"
   ).run(
     name ?? (existing as any).name,
@@ -41,18 +41,18 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     id,
   )
 
-  const updated = db.prepare("SELECT * FROM customers WHERE id = ?").get(id)
+  const updated = await db.prepare("SELECT * FROM customers WHERE id = ?").get(id)
   return NextResponse.json(updated)
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = requireAdmin(request)
+  const session = await requireAdmin(request)
   if (session instanceof NextResponse) return session
   const { id } = await params
-  const db = getDb()
-  const existing = db.prepare("SELECT * FROM customers WHERE id = ?").get(id)
+  const db = await getDb()
+  const existing = await db.prepare("SELECT * FROM customers WHERE id = ?").get(id)
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
-  db.prepare("DELETE FROM customers WHERE id = ?").run(id)
+  await db.prepare("DELETE FROM customers WHERE id = ?").run(id)
   return NextResponse.json({ success: true })
 }

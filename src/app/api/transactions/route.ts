@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/api-auth"
 import type { NextRequest } from "next/server"
 
 export async function GET(request: NextRequest) {
-  const session = requireAdmin(request)
+  const session = await requireAdmin(request)
   if (session instanceof NextResponse) return session
   const { searchParams } = new URL(request.url)
   const page = Math.max(1, Number(searchParams.get("page")) || 1)
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   const customerName = searchParams.get("customerName") || ""
   const offset = (page - 1) * limit
 
-  const db = getDb()
+  const db = await getDb()
   const conditions: string[] = []
   const params: any[] = []
 
@@ -32,15 +32,15 @@ export async function GET(request: NextRequest) {
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : ""
-  const countRow = db.prepare(`SELECT COUNT(*) as c FROM transactions ${where}`).get(...params) as any
+  const countRow = await db.prepare(`SELECT COUNT(*) as c FROM transactions ${where}`).get(...params) as any
   const total = countRow.c
-  const data = db.prepare(`SELECT * FROM transactions ${where} ORDER BY timestamp DESC, id DESC LIMIT ? OFFSET ?`).all(...params, limit, offset)
+  const data = await db.prepare(`SELECT * FROM transactions ${where} ORDER BY timestamp DESC, id DESC LIMIT ? OFFSET ?`).all(...params, limit, offset)
 
   return NextResponse.json({ data, total, page, limit, totalPages: Math.ceil(total / limit) })
 }
 
 export async function POST(request: Request) {
-  const session = requireAdmin(request)
+  const session = await requireAdmin(request)
   if (session instanceof NextResponse) return session
   const body = await request.json()
   const { customerName, productName, amount, status, paymentMethod } = body
@@ -49,19 +49,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "customerName, productName, and amount are required" }, { status: 400 })
   }
 
-  const db = getDb()
+  const db = await getDb()
   const id = `T-${Date.now()}`
   const timestamp = new Date().toISOString()
 
-  db.prepare(
+  await db.prepare(
     "INSERT INTO transactions (id, customerName, productName, amount, status, timestamp, paymentMethod) VALUES (?, ?, ?, ?, ?, ?, ?)"
   ).run(id, customerName, productName, amount, status ?? "completed", timestamp, paymentMethod ?? "Credit Card")
 
-  const customer = db.prepare("SELECT * FROM customers WHERE name = ?").get(customerName) as any
+  const customer = await db.prepare("SELECT * FROM customers WHERE name = ?").get(customerName) as any
   if (customer) {
-    db.prepare("UPDATE customers SET totalOrders = totalOrders + 1, totalSpent = totalSpent + ? WHERE name = ?").run(amount, customerName)
+    await db.prepare("UPDATE customers SET totalOrders = totalOrders + 1, totalSpent = totalSpent + ? WHERE name = ?").run(amount, customerName)
   }
 
-  const transaction = db.prepare("SELECT * FROM transactions WHERE id = ?").get(id)
+  const transaction = await db.prepare("SELECT * FROM transactions WHERE id = ?").get(id)
   return NextResponse.json(transaction, { status: 201 })
 }

@@ -1,28 +1,89 @@
-import { DatabaseSync } from "node:sqlite"
-import path from "path"
 import { createHash, randomBytes } from "crypto"
 
-const DB_PATH = path.join(process.cwd(), "data.db")
+interface DbRow { [key: string]: any }
+interface Stmt {
+  get(...args: any[]): Promise<DbRow | undefined>
+  all(...args: any[]): Promise<DbRow[]>
+  run(...args: any[]): Promise<{ changes: number; lastInsertRowid?: number | bigint }>
+}
 
-let db: DatabaseSync | null = null
+interface Db {
+  prepare(sql: string): Stmt
+  exec(sql: string): Promise<void>
+}
 
-export function getDb(): DatabaseSync {
-  if (!db) {
-    db = new DatabaseSync(DB_PATH)
-    db.exec("PRAGMA journal_mode = WAL")
-    initSchema(db)
+const isTurso = !!process.env.TURSO_DB_URL
+
+let db: Db | null = null
+
+export async function getDb(): Promise<Db> {
+  if (db) return db
+
+  if (isTurso) {
+    const { createClient } = await import("@libsql/client/web")
+    const client = createClient({
+      url: process.env.TURSO_DB_URL!,
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    })
+    db = {
+      prepare(sql: string): Stmt {
+        return {
+          async get(...args) {
+            const res = await client.execute({ sql, args })
+            return res.rows[0] as DbRow | undefined
+          },
+          async all(...args) {
+            const res = await client.execute({ sql, args })
+            return res.rows as DbRow[]
+          },
+          async run(...args) {
+            const res = await client.execute({ sql, args })
+            return { changes: Number(res.rowsAffected || 0), lastInsertRowid: res.lastInsertRowid }
+          },
+        }
+      },
+      async exec(sql: string) {
+        const statements = sql.split(";").map(s => s.trim()).filter(Boolean)
+        for (const stmt of statements) {
+          await client.execute(stmt)
+        }
+      },
+    }
+    await initSchema(db)
+  } else {
+    const { DatabaseSync } = await import("node:sqlite")
+    const path = await import("path")
+    const DB_PATH = path.join(process.cwd(), "data.db")
+    const raw = new DatabaseSync(DB_PATH)
+    raw.exec("PRAGMA journal_mode = WAL")
+    db = {
+      prepare(sql: string): Stmt {
+        const stmt = raw.prepare(sql)
+        return {
+          get(...args) { return Promise.resolve(stmt.get(...args) as DbRow | undefined) },
+          all(...args) { return Promise.resolve(stmt.all(...args) as DbRow[]) },
+          run(...args) {
+            const info = stmt.run(...args)
+            return Promise.resolve({ changes: Number(info.changes), lastInsertRowid: info.lastInsertRowid })
+          },
+        }
+      },
+      async exec(sql: string) {
+        raw.exec(sql)
+      },
+    }
+    await initSchema(db)
   }
   return db
 }
 
-function initSchema(db: DatabaseSync) {
-  db.exec(`
+async function initSchema(db: Db) {
+  await db.exec(`
     CREATE TABLE IF NOT EXISTS categories (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL UNIQUE,
       createdAt TEXT NOT NULL DEFAULT (date('now'))
     );
-
     CREATE TABLE IF NOT EXISTS products (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -32,7 +93,6 @@ function initSchema(db: DatabaseSync) {
       description TEXT NOT NULL DEFAULT '',
       createdAt TEXT NOT NULL DEFAULT (date('now'))
     );
-
     CREATE TABLE IF NOT EXISTS customers (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -40,48 +100,37 @@ function initSchema(db: DatabaseSync) {
       totalOrders INTEGER NOT NULL DEFAULT 0,
       totalSpent REAL NOT NULL DEFAULT 0,
       joinedAt TEXT NOT NULL DEFAULT (date('now')),
-      status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'inactive')),
+      status TEXT NOT NULL DEFAULT 'active',
       userId INTEGER REFERENCES users(id)
     );
-
     CREATE TABLE IF NOT EXISTS transactions (
       id TEXT PRIMARY KEY,
       customerName TEXT NOT NULL,
       productName TEXT NOT NULL,
       amount REAL NOT NULL,
-      status TEXT NOT NULL DEFAULT 'completed' CHECK(status IN ('completed', 'pending', 'failed')),
+      status TEXT NOT NULL DEFAULT 'completed',
       timestamp TEXT NOT NULL DEFAULT (datetime('now')),
       paymentMethod TEXT NOT NULL DEFAULT 'Credit Card'
     );
-
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
       password TEXT NOT NULL,
-      role TEXT NOT NULL DEFAULT 'admin' CHECK(role IN ('admin', 'client')),
-      createdAt TEXT NOT NULL DEFAULT (date('now'))
+      role TEXT NOT NULL DEFAULT 'client'
     );
-
     CREATE TABLE IF NOT EXISTS sessions (
       token TEXT PRIMARY KEY,
       userId INTEGER NOT NULL REFERENCES users(id),
-      role TEXT NOT NULL,
       createdAt TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `)
 
-  try { db.exec("ALTER TABLE customers ADD COLUMN userId INTEGER REFERENCES users(id)") } catch { /* already exists */ }
+  try { await db.exec("ALTER TABLE customers ADD COLUMN userId INTEGER REFERENCES users(id)") } catch { /* already exists */ }
 
-  const row = db.prepare("SELECT COUNT(*) as cnt FROM products").get() as { cnt: number }
-  if (row.cnt === 0) {
-    seedUsers(db)
-    seed(db)
-  }
-
-  const catRow = db.prepare("SELECT COUNT(*) as cnt FROM categories").get() as { cnt: number }
-  if (catRow.cnt === 0) {
-    seedCategories(db)
+  const row = await db.prepare("SELECT COUNT(*) as cnt FROM products").get() as any
+  if (!row || row.cnt === 0) {
+    await seed(db)
   }
 }
 
@@ -89,99 +138,112 @@ export function hashPassword(password: string): string {
   return createHash("sha256").update(password).digest("hex")
 }
 
-function seedUsers(db: DatabaseSync) {
-  const insert = db.prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)")
-  insert.run("Admin User", "admin@dashboard.com", hashPassword("admin123"), "admin")
-  insert.run("Client User", "client@dashboard.com", hashPassword("client123"), "client")
+export function generateToken(): string {
+  return randomBytes(32).toString("hex")
 }
 
-export function createSession(userId: number, role: string): string {
-  const db = getDb()
-  const token = randomBytes(32).toString("hex")
-  db.prepare("INSERT INTO sessions (token, userId, role) VALUES (?, ?, ?)").run(token, userId, role)
+interface Session {
+  token: string
+  userId: number
+  role: string
+  createdAt: string
+}
+
+export async function createSession(userId: number): Promise<string> {
+  const token = generateToken()
+  const db = await getDb()
+  await db.prepare("INSERT INTO sessions (token, userId) VALUES (?, ?)").run(token, userId)
   return token
 }
 
-export function getSession(token: string): { userId: number; role: string } | null {
-  const db = getDb()
-  const row = db.prepare("SELECT userId, role FROM sessions WHERE token = ?").get(token) as any
-  return row || null
+export async function getSession(token: string): Promise<Session | null> {
+  const db = await getDb()
+  const row = await db.prepare(`
+    SELECT s.token, s.userId, s.createdAt, u.role FROM sessions s
+    JOIN users u ON u.id = s.userId WHERE s.token = ?
+  `).get(token) as any
+  return row ? { token: row.token, userId: row.userId, role: row.role, createdAt: row.createdAt } : null
 }
 
-export function deleteSession(token: string) {
-  const db = getDb()
-  db.prepare("DELETE FROM sessions WHERE token = ?").run(token)
+export async function deleteSession(token: string): Promise<void> {
+  const db = await getDb()
+  await db.prepare("DELETE FROM sessions WHERE token = ?").run(token)
 }
 
-export function verifyPassword(email: string, password: string): { id: number; name: string; email: string; role: string } | null {
-  const db = getDb()
-  const user = db.prepare("SELECT id, name, email, password, role FROM users WHERE email = ?").get(email) as any
-  if (!user) return null
-  if (user.password !== hashPassword(password)) return null
-  return { id: user.id, name: user.name, email: user.email, role: user.role }
-}
+async function seed(db: Db) {
+  await db.exec(`
+    INSERT OR IGNORE INTO categories (id, name) VALUES
+      ('CAT-1', 'Electronics'),
+      ('CAT-2', 'Clothing'),
+      ('CAT-3', 'Books'),
+      ('CAT-4', 'Home & Garden'),
+      ('CAT-5', 'Sports');
+  `)
 
-function seedCategories(db: DatabaseSync) {
-  const categories = [
-    ["CAT-1", "Electronics", "2025-01-01"],
-    ["CAT-2", "Accessories", "2025-01-01"],
-    ["CAT-3", "Footwear", "2025-01-01"],
-    ["CAT-4", "Fitness", "2025-01-01"],
-    ["CAT-5", "Home", "2025-01-01"],
+  const users = [
+    ["Admin User", "admin@dashboard.com", hashPassword("admin123"), "admin"],
+    ["Client User", "client@dashboard.com", hashPassword("client123"), "client"],
   ]
-  const insert = db.prepare("INSERT INTO categories (id, name, createdAt) VALUES (?, ?, ?)")
-  for (const c of categories) insert.run(...c)
-}
+  for (const u of users) {
+    await db.prepare("INSERT OR IGNORE INTO users (name, email, password, role) VALUES (?, ?, ?, ?)").run(...u)
+  }
 
-function seed(db: DatabaseSync) {
   const products = [
-    ["P-1001", "Wireless Headphones", "Electronics", 149.99, 45, "Premium wireless headphones with noise cancellation", "2025-01-15"],
-    ["P-1002", "Smart Watch", "Electronics", 299.99, 30, "Fitness tracking smartwatch with GPS", "2025-02-10"],
-    ["P-1003", "Leather Backpack", "Accessories", 89.99, 60, "Handcrafted leather backpack", "2025-03-05"],
-    ["P-1004", "Running Shoes", "Footwear", 129.99, 25, "Lightweight running shoes", "2025-01-20"],
-    ["P-1005", "Yoga Mat", "Fitness", 39.99, 80, "Non-slip exercise yoga mat", "2025-04-12"],
-    ["P-1006", "Coffee Maker", "Home", 79.99, 20, "Programmable drip coffee maker", "2025-02-28"],
-    ["P-1007", "Bluetooth Speaker", "Electronics", 59.99, 55, "Portable waterproof speaker", "2025-05-01"],
-    ["P-1008", "Desk Lamp", "Home", 49.99, 40, "LED desk lamp with adjustable brightness", "2025-03-18"],
-    ["P-1009", "Sunglasses", "Accessories", 159.99, 35, "Polarized aviator sunglasses", "2025-04-22"],
-    ["P-1010", "Protein Powder", "Fitness", 54.99, 90, "Whey protein isolate powder", "2025-05-10"],
+    ["P-1741651200001", "MacBook Pro", "Electronics", 1299.00, 50, "Powerful laptop for professionals", "2024-06-01"],
+    ["P-1741651200002", "Leather Jacket", "Clothing", 199.99, 100, "Premium leather jacket", "2024-06-05"],
+    ["P-1741651200003", "React Handbook", "Books", 39.99, 200, "Learn React from scratch", "2024-06-10"],
+    ["P-1741651200004", "Garden Tool Set", "Home & Garden", 89.99, 75, "Complete garden tool set", "2024-06-15"],
+    ["P-1741651200005", "iPhone 15 Pro", "Electronics", 1099.99, 30, "Latest iPhone model", "2024-06-20"],
+    ["P-1741651200006", "Running Shoes", "Sports", 129.99, 150, "Comfortable running shoes", "2024-06-25"],
+    ["P-1741651200007", "Wireless Earbuds", "Electronics", 179.99, 80, "High-quality wireless earbuds", "2024-07-01"],
+    ["P-1741651200008", "Denim Jeans", "Clothing", 89.99, 120, "Classic denim jeans", "2024-07-05"],
+    ["P-1741651200009", "TypeScript Guide", "Books", 29.99, 180, "Comprehensive TypeScript guide", "2024-07-10"],
+    ["P-1741651200010", "BBQ Grill", "Home & Garden", 299.99, 40, "Outdoor BBQ grill", "2024-07-15"],
+    ["P-1741651200011", "Yoga Mat", "Sports", 49.99, 200, "Premium yoga mat", "2024-07-20"],
+    ["P-1741651200012", "iPad Air", "Electronics", 699.99, 45, "Powerful tablet for work and play", "2024-07-25"],
+    ["P-1741651200013", "Winter Coat", "Clothing", 249.99, 60, "Warm winter coat", "2024-08-01"],
+    ["P-1741651200014", "Node.js Book", "Books", 44.99, 150, "Master Node.js development", "2024-08-05"],
+    ["P-1741651200015", "Coffee Maker", "Home & Garden", 79.99, 90, "Automatic coffee maker", "2024-08-10"],
   ]
 
   const customers = [
     ["C-001", "Alice Johnson", "alice@example.com", 12, 2340.50, "2024-06-15", "active", 2],
     ["C-002", "Bob Smith", "bob@example.com", 8, 1250.00, "2024-08-20", "active", null],
-    ["C-003", "Carol Davis", "carol@example.com", 5, 680.25, "2025-01-10", "active", null],
-    ["C-004", "David Wilson", "david@example.com", 15, 3450.75, "2024-03-05", "active", null],
-    ["C-005", "Eve Martinez", "eve@example.com", 3, 210.00, "2025-04-18", "inactive", null],
-    ["C-006", "Frank Taylor", "frank@example.com", 20, 5200.00, "2024-01-12", "active", null],
-    ["C-007", "Grace Lee", "grace@example.com", 7, 980.50, "2024-11-30", "active", null],
-    ["C-008", "Henry Brown", "henry@example.com", 2, 150.00, "2025-06-01", "inactive", null],
+    ["C-003", "Charlie Brown", "charlie@example.com", 5, 890.00, "2024-10-01", "active", null],
+    ["C-004", "Diana Prince", "diana@example.com", 15, 3450.00, "2024-04-10", "active", null],
+    ["C-005", "Eve Wilson", "eve@example.com", 3, 450.00, "2025-01-15", "inactive", null],
   ]
 
   const transactions = [
-    ["T-5001", "Alice Johnson", "Wireless Headphones", 149.99, "completed", "2025-07-10T09:15:00Z", "Credit Card"],
-    ["T-5002", "Frank Taylor", "Smart Watch", 299.99, "completed", "2025-07-10T09:30:00Z", "PayPal"],
-    ["T-5003", "Carol Davis", "Yoga Mat", 39.99, "pending", "2025-07-10T09:45:00Z", "Debit Card"],
-    ["T-5004", "Bob Smith", "Leather Backpack", 89.99, "completed", "2025-07-10T10:00:00Z", "Credit Card"],
-    ["T-5005", "Grace Lee", "Bluetooth Speaker", 59.99, "failed", "2025-07-10T10:15:00Z", "PayPal"],
-    ["T-5006", "David Wilson", "Running Shoes", 129.99, "completed", "2025-07-10T10:30:00Z", "Credit Card"],
-    ["T-5007", "Alice Johnson", "Coffee Maker", 79.99, "pending", "2025-07-10T10:45:00Z", "Debit Card"],
-    ["T-5008", "Henry Brown", "Desk Lamp", 49.99, "completed", "2025-07-10T11:00:00Z", "Credit Card"],
-    ["T-5009", "Eve Martinez", "Sunglasses", 159.99, "completed", "2025-07-10T11:15:00Z", "PayPal"],
-    ["T-5010", "Frank Taylor", "Protein Powder", 54.99, "completed", "2025-07-10T11:30:00Z", "Credit Card"],
+    ["T-001", "Alice Johnson", "MacBook Pro", 1299.00, "completed", "2024-06-20T10:30:00", "Credit Card"],
+    ["T-002", "Bob Smith", "Leather Jacket", 199.99, "completed", "2024-06-21T14:00:00", "PayPal"],
+    ["T-003", "Alice Johnson", "iPhone 15 Pro", 1099.99, "completed", "2024-06-25T09:15:00", "Debit Card"],
+    ["T-004", "Charlie Brown", "React Handbook", 39.99, "completed", "2024-06-28T11:00:00", "Credit Card"],
+    ["T-005", "Diana Prince", "Garden Tool Set", 89.99, "completed", "2024-07-03T16:30:00", "Credit Card"],
+    ["T-006", "Bob Smith", "Running Shoes", 129.99, "completed", "2024-07-08T10:00:00", "Debit Card"],
+    ["T-007", "Alice Johnson", "Wireless Earbuds", 179.99, "pending", "2024-07-10T08:45:00", "PayPal"],
+    ["T-008", "Eve Wilson", "Denim Jeans", 89.99, "completed", "2024-07-15T13:20:00", "Credit Card"],
+    ["T-009", "Diana Prince", "BBQ Grill", 299.99, "completed", "2024-07-20T15:00:00", "Debit Card"],
+    ["T-010", "Charlie Brown", "TypeScript Guide", 29.99, "failed", "2024-07-25T09:30:00", "PayPal"],
+    ["T-011", "Alice Johnson", "Yoga Mat", 49.99, "completed", "2024-08-01T11:00:00", "Credit Card"],
+    ["T-012", "Bob Smith", "iPad Air", 699.99, "completed", "2024-08-05T14:30:00", "Debit Card"],
+    ["T-013", "Diana Prince", "Winter Coat", 249.99, "completed", "2024-08-10T10:00:00", "Credit Card"],
+    ["T-014", "Alice Johnson", "Node.js Book", 44.99, "pending", "2024-08-15T16:00:00", "PayPal"],
+    ["T-015", "Charlie Brown", "Coffee Maker", 79.99, "completed", "2024-08-20T12:00:00", "Debit Card"],
+    ["T-016", "Eve Wilson", "MacBook Pro", 1299.00, "completed", "2024-08-25T09:00:00", "Credit Card"],
+    ["T-017", "Bob Smith", "Garden Tool Set", 89.99, "completed", "2024-09-01T11:30:00", "Debit Card"],
+    ["T-018", "Alice Johnson", "Denim Jeans", 89.99, "completed", "2024-09-05T14:00:00", "Debit Card"],
+    ["T-019", "Diana Prince", "iPhone 15 Pro", 1099.99, "completed", "2024-09-10T10:30:00", "Credit Card"],
+    ["T-020", "Charlie Brown", "Running Shoes", 129.99, "pending", "2024-09-15T15:00:00", "PayPal"],
   ]
 
-  const insertProduct = db.prepare(
-    "INSERT INTO products (id, name, category, price, stock, description, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
-  )
-  const insertCustomer = db.prepare(
-    "INSERT INTO customers (id, name, email, totalOrders, totalSpent, joinedAt, status, userId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-  )
-  const insertTransaction = db.prepare(
-    "INSERT INTO transactions (id, customerName, productName, amount, status, timestamp, paymentMethod) VALUES (?, ?, ?, ?, ?, ?, ?)"
-  )
-
-  for (const p of products) insertProduct.run(...p)
-  for (const c of customers) insertCustomer.run(...c)
-  for (const t of transactions) insertTransaction.run(...t)
+  for (const p of products) {
+    await db.prepare("INSERT OR IGNORE INTO products (id, name, category, price, stock, description, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)").run(...p)
+  }
+  for (const c of customers) {
+    await db.prepare("INSERT OR IGNORE INTO customers (id, name, email, totalOrders, totalSpent, joinedAt, status, userId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").run(...c)
+  }
+  for (const t of transactions) {
+    await db.prepare("INSERT OR IGNORE INTO transactions (id, customerName, productName, amount, status, timestamp, paymentMethod) VALUES (?, ?, ?, ?, ?, ?, ?)").run(...t)
+  }
 }

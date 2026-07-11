@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
-import { getSession } from "@/lib/db"
-import { getDb } from "@/lib/db"
+import { getSession, getDb } from "@/lib/db"
 
 export async function GET(request: Request) {
   const auth = request.headers.get("authorization")
@@ -9,13 +8,13 @@ export async function GET(request: Request) {
   }
 
   const token = auth.slice(7)
-  const session = getSession(token)
+  const session = await getSession(token)
   if (!session) {
     return NextResponse.json({ error: "Invalid session" }, { status: 401 })
   }
 
-  const db = getDb()
-  const user = db.prepare("SELECT id, name, email, role FROM users WHERE id = ?").get(session.userId) as any
+  const db = await getDb()
+  const user = await db.prepare("SELECT id, name, email, role FROM users WHERE id = ?").get(session.userId) as any
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 })
   }

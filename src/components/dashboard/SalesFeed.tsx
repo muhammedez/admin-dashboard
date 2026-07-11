@@ -1,9 +1,10 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useDashboard } from "@/lib/store"
 import { ArrowUpRight, Clock, CheckCircle, XCircle } from "lucide-react"
 
-const statusIcon = {
+const statusIcon: Record<string, any> = {
   completed: CheckCircle,
   pending: Clock,
   failed: XCircle,
@@ -11,9 +12,21 @@ const statusIcon = {
 
 export function SalesFeed({ customerName }: { customerName?: string }) {
   const { recentTransactions: allTransactions } = useDashboard()
-  const transactions = customerName
-    ? allTransactions.filter((tx: any) => tx.customerName === customerName)
-    : allTransactions
+  const [clientTx, setClientTx] = useState<any[]>([])
+
+  useEffect(() => {
+    if (!customerName) return
+    const token = localStorage.getItem("auth_token")
+    if (!token) return
+    fetch("/api/client/transactions?limit=15", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => setClientTx(data.data || []))
+      .catch(() => {})
+  }, [customerName])
+
+  const transactions = customerName ? clientTx : allTransactions
 
   return (
     <div className="border border-gray-200 bg-white dark:border-0 dark:bg-gray-900">

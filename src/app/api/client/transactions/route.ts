@@ -8,13 +8,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const session = getSession(auth.slice(7))
+  const session = await getSession(auth.slice(7))
   if (!session) {
     return NextResponse.json({ error: "Invalid session" }, { status: 401 })
   }
 
-  const db = getDb()
-  const customer = db.prepare("SELECT name FROM customers WHERE userId = ?").get(session.userId) as any
+  const db = await getDb()
+  const customer = await db.prepare("SELECT name FROM customers WHERE userId = ?").get(session.userId) as any
 
   if (!customer) {
     return NextResponse.json({ data: [], total: 0, page: 1, limit: 10, totalPages: 0 })
@@ -40,9 +40,9 @@ export async function GET(request: NextRequest) {
   }
 
   const where = "WHERE " + conditions.join(" AND ")
-  const countRow = db.prepare(`SELECT COUNT(*) as c FROM transactions ${where}`).get(...params) as any
+  const countRow = await db.prepare(`SELECT COUNT(*) as c FROM transactions ${where}`).get(...params) as any
   const total = countRow.c
-  const data = db.prepare(`SELECT * FROM transactions ${where} ORDER BY timestamp DESC, id DESC LIMIT ? OFFSET ?`).all(...params, limit, offset)
+  const data = await db.prepare(`SELECT * FROM transactions ${where} ORDER BY timestamp DESC, id DESC LIMIT ? OFFSET ?`).all(...params, limit, offset)
 
   return NextResponse.json({ data, total, page, limit, totalPages: Math.ceil(total / limit) })
 }

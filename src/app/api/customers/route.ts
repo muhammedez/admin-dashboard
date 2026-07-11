@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/api-auth"
 import type { NextRequest } from "next/server"
 
 export async function GET(request: NextRequest) {
-  const session = requireAdmin(request)
+  const session = await requireAdmin(request)
   if (session instanceof NextResponse) return session
 
   const { searchParams } = new URL(request.url)
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get("search") || ""
   const offset = (page - 1) * limit
 
-  const db = getDb()
+  const db = await getDb()
   const conditions: string[] = []
   const params: any[] = []
 
@@ -23,15 +23,15 @@ export async function GET(request: NextRequest) {
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : ""
-  const countRow = db.prepare(`SELECT COUNT(*) as c FROM customers ${where}`).get(...params) as any
+  const countRow = await db.prepare(`SELECT COUNT(*) as c FROM customers ${where}`).get(...params) as any
   const total = countRow.c
-  const data = db.prepare(`SELECT * FROM customers ${where} ORDER BY joinedAt DESC, id DESC LIMIT ? OFFSET ?`).all(...params, limit, offset)
+  const data = await db.prepare(`SELECT * FROM customers ${where} ORDER BY joinedAt DESC, id DESC LIMIT ? OFFSET ?`).all(...params, limit, offset)
 
   return NextResponse.json({ data, total, page, limit, totalPages: Math.ceil(total / limit) })
 }
 
 export async function POST(request: Request) {
-  const session = requireAdmin(request)
+  const session = await requireAdmin(request)
   if (session instanceof NextResponse) return session
   const body = await request.json()
   const { name, email, status } = body
@@ -40,12 +40,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "name and email are required" }, { status: 400 })
   }
 
-  const db = getDb()
+  const db = await getDb()
   const id = `C-${Date.now().toString().slice(-6)}`
   const joinedAt = new Date().toISOString().split("T")[0]
 
   try {
-    db.prepare(
+    await db.prepare(
       "INSERT INTO customers (id, name, email, totalOrders, totalSpent, joinedAt, status) VALUES (?, ?, ?, 0, 0, ?, ?)"
     ).run(id, name, email, joinedAt, status ?? "active")
   } catch (err: any) {
@@ -55,6 +55,6 @@ export async function POST(request: Request) {
     throw err
   }
 
-  const customer = db.prepare("SELECT * FROM customers WHERE id = ?").get(id)
+  const customer = await db.prepare("SELECT * FROM customers WHERE id = ?").get(id)
   return NextResponse.json(customer, { status: 201 })
 }

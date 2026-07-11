@@ -12,19 +12,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 })
   }
 
-  const db = getDb()
+  const db = await getDb()
 
-  const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email)
+  const existing = await db.prepare("SELECT id FROM users WHERE email = ?").get(email)
   if (existing) {
     return NextResponse.json({ error: "Email already registered" }, { status: 409 })
   }
 
   const userRole = role === "admin" ? "admin" : "client"
-  const result = db.prepare(
+  const result = await db.prepare(
     "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)"
   ).run(name, email, hashPassword(password), userRole)
 
-  const token = createSession(Number(result.lastInsertRowid), userRole)
+  const token = await createSession(Number(result.lastInsertRowid))
 
   return NextResponse.json({
     token,

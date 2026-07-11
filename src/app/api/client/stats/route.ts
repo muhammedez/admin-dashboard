@@ -8,13 +8,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const session = getSession(auth.slice(7))
+  const session = await getSession(auth.slice(7))
   if (!session) {
     return NextResponse.json({ error: "Invalid session" }, { status: 401 })
   }
 
-  const db = getDb()
-  const customer = db.prepare("SELECT * FROM customers WHERE userId = ?").get(session.userId) as any
+  const db = await getDb()
+  const customer = await db.prepare("SELECT * FROM customers WHERE userId = ?").get(session.userId) as any
 
   if (!customer) {
     return NextResponse.json({
@@ -38,10 +38,10 @@ export async function GET(request: NextRequest) {
   const tf = dateFilter("timestamp")
   const custName = customer.name
 
-  const txCount = (db.prepare(`SELECT COUNT(*) as c FROM transactions WHERE customerName = ? ${tf.clause}`).get(custName, ...tf.params) as any).c
-  const totalSpent = (db.prepare(`SELECT COALESCE(SUM(amount),0) as s FROM transactions WHERE customerName = ? ${tf.clause}`).get(custName, ...tf.params) as any).s
+  const txCount = (await db.prepare(`SELECT COUNT(*) as c FROM transactions WHERE customerName = ? ${tf.clause}`).get(custName, ...tf.params) as any).c
+  const totalSpent = (await db.prepare(`SELECT COALESCE(SUM(amount),0) as s FROM transactions WHERE customerName = ? ${tf.clause}`).get(custName, ...tf.params) as any).s
 
-  const transactions = db.prepare(`SELECT amount, timestamp FROM transactions WHERE customerName = ? ${tf.clause} ORDER BY timestamp`).all(custName, ...tf.params) as any[]
+  const transactions = await db.prepare(`SELECT amount, timestamp FROM transactions WHERE customerName = ? ${tf.clause} ORDER BY timestamp`).all(custName, ...tf.params) as any[]
 
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
   const dayBuckets: Record<string, { revenue: number; count: number }> = {}
@@ -68,10 +68,10 @@ export async function GET(request: NextRequest) {
     const prevFrom = new Date(new Date(from).getTime() - rangeLen - 86400000).toISOString().split("T")[0]
     const prevTo = new Date(new Date(from).getTime() - 86400000).toISOString().split("T")[0]
 
-    const tc = db.prepare(`SELECT COUNT(*) as c FROM transactions WHERE customerName = ? AND timestamp >= ? AND timestamp <= ?`).get(custName, prevFrom, prevTo + "T23:59:59") as any
+    const tc = await db.prepare(`SELECT COUNT(*) as c FROM transactions WHERE customerName = ? AND timestamp >= ? AND timestamp <= ?`).get(custName, prevFrom, prevTo + "T23:59:59") as any
     prevTxCount = tc.c || 1
 
-    const sp = db.prepare(`SELECT COALESCE(SUM(amount),0) as s FROM transactions WHERE customerName = ? AND timestamp >= ? AND timestamp <= ?`).get(custName, prevFrom, prevTo + "T23:59:59") as any
+    const sp = await db.prepare(`SELECT COALESCE(SUM(amount),0) as s FROM transactions WHERE customerName = ? AND timestamp >= ? AND timestamp <= ?`).get(custName, prevFrom, prevTo + "T23:59:59") as any
     prevSpent = sp.s || 1
   }
 
