@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Plus, Pencil, Trash2, Search, X, Package } from "lucide-react"
+import { Plus, Pencil, Trash2, Search, X } from "lucide-react"
 import { api } from "@/lib/api"
 import { useDashboard } from "@/lib/store"
 import { useAuth } from "@/lib/auth"
@@ -96,17 +96,6 @@ export function ProductsTable() {
     }
   }
 
-  const handleToggleStock = async (product: any, value: string) => {
-    try {
-      const newStock = value === "in" ? 10 : 0
-      await api.products.update(product.id, { stock: newStock })
-      toast(value === "in" ? "Product marked in stock" : "Product marked out of stock", "success")
-      load(page, search, category)
-    } catch (e: any) {
-      toast(e.message || "Failed to update stock", "error")
-    }
-  }
-
   return (
     <div className="border border-gray-200 bg-white dark:border-0 dark:bg-gray-900">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 px-6 py-4 dark:border-gray-800">
@@ -196,24 +185,10 @@ export function ProductsTable() {
                         </span>
                       </td>
                       <td className="px-6 py-2.5 font-medium dark:text-gray-200">${Number(product.price).toFixed(2)}</td>
-                      <td className="px-6 py-2.5">
-                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${product.stock > 0 ? 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400' : 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400'}`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${product.stock > 0 ? 'bg-green-500' : 'bg-red-500'}`} />
-                          {product.stock > 0 ? `In Stock (${product.stock})` : "Out of Stock"}
-                        </span>
-                      </td>
+                      <td className="px-6 py-2.5 dark:text-gray-300">{product.stock}</td>
                       <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{product.createdAt}</td>
                       {isAdmin && (
                         <td className="px-6 py-2.5 text-right">
-                          <select
-                            value={product.stock > 0 ? "in" : "out"}
-                            onChange={(e) => handleToggleStock(product, e.target.value)}
-                            onClick={(e) => e.stopPropagation()}
-                            className="mr-2 rounded border border-gray-200 bg-gray-50 px-2 py-1 text-xs outline-none focus:border-gray-900 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-gray-400"
-                          >
-                            <option value="in">In Stock</option>
-                            <option value="out">Out of Stock</option>
-                          </select>
                           <button onClick={() => modal.openEdit(product.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
                             <Pencil className="h-4 w-4" />
                           </button>
