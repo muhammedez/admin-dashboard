@@ -148,7 +148,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    const id = setInterval(() => notifyChange(), 30000)
+    const id = setInterval(() => notifyChange(), 5000)
     return () => clearInterval(id)
   }, [notifyChange])
 
