@@ -6,7 +6,7 @@ import { useDashboard } from "@/lib/store"
 import { StatCard } from "@/components/dashboard/StatCard"
 import { RevenueChart } from "@/components/dashboard/RevenueChart"
 import { SalesFeed } from "@/components/dashboard/SalesFeed"
-import { DollarSign, ShoppingCart, TrendingUp, Package } from "lucide-react"
+import { DollarSign, ShoppingCart, Package } from "lucide-react"
 
 export default function ClientDashboard() {
   const { token } = useAuth()
@@ -25,7 +25,6 @@ export default function ClientDashboard() {
     ? [
         { title: "My Spending", value: `$${stats.stats.totalSpent.toLocaleString()}`, change: stats.stats.revenueChange, icon: DollarSign },
         { title: "My Orders", value: stats.stats.totalTransactions.toString(), change: stats.stats.ordersChange, icon: ShoppingCart },
-        { title: "Total Orders", value: stats.stats.totalOrders.toString(), change: 0, icon: TrendingUp },
         { title: "Products Available", value: globalStats.totalProducts.toString(), change: globalStats.productsChange, icon: Package },
       ]
     : []

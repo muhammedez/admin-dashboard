@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react"
 import { api, setApiToken } from "./api"
 import { useAuth } from "./auth"
 
@@ -35,18 +35,12 @@ interface DashboardStore {
   setTransactions: (state: EntityState, page: number, search: string, filter: string) => void
   setCategories: (data: any[]) => void
   refreshRecentTransactions: () => Promise<void>
+  notifyChange: () => void
 }
 
 const empty: EntityState = { data: [], total: 0, totalPages: 0 }
 
 const StoreContext = createContext<DashboardStore | null>(null)
-
-const today = () => new Date().toISOString().split("T")[0]
-const weekAgo = () => {
-  const d = new Date()
-  d.setDate(d.getDate() - 7)
-  return d.toISOString().split("T")[0]
-}
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
   const { token } = useAuth()
@@ -62,7 +56,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [revenueData, setRevenueData] = useState<any[]>([])
   const [categoryRevenue, setCategoryRevenue] = useState<any[]>([])
   const [paymentMethods, setPaymentMethods] = useState<any[]>([])
-  const [dateRange, setDateRange] = useState({ from: weekAgo(), to: today() })
+  const [dateRange, setDateRange] = useState({ from: "", to: "" })
 
   const [products, setProductsState] = useState<EntityState>(empty)
   const [customers, setCustomersState] = useState<EntityState>(empty)
@@ -78,8 +72,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [productCategory, setProductCategory] = useState("All")
   const [transactionFilter, setTransactionFilter] = useState("all")
 
-  const prefetched = useRef(false)
-
   const fetchStats = useCallback(async (from: string, to: string) => {
     try {
       const data = await api.stats.get({ from, to })
@@ -90,10 +82,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     } catch { /* silent */ }
   }, [])
 
-  useEffect(() => {
-    fetchStats(dateRange.from, dateRange.to)
-  }, [fetchStats, dateRange])
-
   const refreshRecentTransactions = useCallback(async () => {
     try {
       const result = await api.transactions.list({ limit: 50 })
@@ -101,20 +89,36 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     } catch { /* silent */ }
   }, [])
 
-  useEffect(() => {
+  const refreshAll = useCallback(async () => {
+    try {
+      const [p, c, t, cat] = await Promise.all([
+        api.products.list({ page: 1, limit: 10 }),
+        api.customers.list({ page: 1, limit: 10 }),
+        api.transactions.list({ page: 1, limit: 10 }),
+        api.categories.list(),
+      ])
+      setProductsState(p)
+      setCustomersState(c)
+      setTransactionsState(t)
+      setCategories(cat.data)
+    } catch { /* silent */ }
+    await fetchStats(dateRange.from, dateRange.to)
+  }, [fetchStats, dateRange])
+
+  const notifyChange = useCallback(() => {
+    refreshAll()
     refreshRecentTransactions()
-    const interval = setInterval(refreshRecentTransactions, 4000)
-    return () => clearInterval(interval)
-  }, [refreshRecentTransactions])
+  }, [refreshAll, refreshRecentTransactions])
 
   useEffect(() => {
-    if (prefetched.current) return
-    prefetched.current = true
-    api.products.list({ page: 1, limit: 10 }).then((r) => setProductsState(r)).catch(() => {})
-    api.customers.list({ page: 1, limit: 10 }).then((r) => setCustomersState(r)).catch(() => {})
-    api.transactions.list({ page: 1, limit: 10 }).then((r) => setTransactionsState(r)).catch(() => {})
-    api.categories.list().then((r) => setCategories(r.data)).catch(() => {})
+    refreshAll()
+    refreshRecentTransactions()
   }, [])
+
+  useEffect(() => {
+    const id = setInterval(() => notifyChange(), 30000)
+    return () => clearInterval(id)
+  }, [notifyChange])
 
   const handleSetDateRange = useCallback((range: { from: string; to: string }) => {
     setDateRange(range)
@@ -132,6 +136,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       setTransactions: (state, page, search, filter) => { setTransactionsState(state); setTransactionPage(page); setTransactionSearch(search); setTransactionFilter(filter) },
       setCategories: (data) => setCategories(data),
       refreshRecentTransactions,
+      notifyChange,
     }}>
       {children}
     </StoreContext.Provider>

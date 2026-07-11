@@ -14,7 +14,7 @@ import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
 import { useModalState } from "@/hooks/useModalState"
 
 export function CustomersTable() {
-  const { customers, customerPage, customerSearch, setCustomers } = useDashboard()
+  const { customers, customerPage, customerSearch, setCustomers, notifyChange } = useDashboard()
   const { user } = useAuth()
   const isAdmin = user?.role === "admin"
   const searchParams = useSearchParams()
@@ -62,6 +62,7 @@ export function CustomersTable() {
       await api.customers.delete(id)
       const target = customers.data.length <= 1 && page > 1 ? page - 1 : page
       goToPage(target)
+      notifyChange()
       toast("Customer deleted", "success")
     } catch (e: any) {
       toast(e.message || "Failed to delete", "error")
@@ -73,11 +74,13 @@ export function CustomersTable() {
       if (modal.editingId) {
         await api.customers.update(modal.editingId, formData)
         modal.close()
+        notifyChange()
         toast("Customer updated", "success")
         goToPage(page)
       } else {
         await api.customers.create(formData)
         modal.close()
+        notifyChange()
         toast("Customer created", "success")
         goToPage(1)
       }

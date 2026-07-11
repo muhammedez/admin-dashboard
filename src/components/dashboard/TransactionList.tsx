@@ -26,7 +26,7 @@ const statusBg: Record<string, string> = {
 }
 
 export function TransactionList({ customerName: filterCustomer }: { customerName?: string }) {
-  const { transactions, transactionPage, transactionSearch, transactionFilter, setTransactions } = useDashboard()
+  const { transactions, transactionPage, transactionSearch, transactionFilter, setTransactions, notifyChange } = useDashboard()
   const { user } = useAuth()
   const isAdmin = user?.role === "admin"
   const searchParams = useSearchParams()
@@ -90,6 +90,7 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
       await api.transactions.delete(id)
       const target = transactions.data.length <= 1 && page > 1 ? page - 1 : page
       goToPage(target)
+      notifyChange()
       toast("Transaction deleted", "success")
     } catch (e: any) {
       toast(e.message || "Failed to delete", "error")
@@ -101,11 +102,13 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
       if (modal.editingId) {
         await api.transactions.update(modal.editingId, formData)
         modal.close()
+        notifyChange()
         toast("Transaction updated", "success")
         goToPage(page)
       } else {
         await api.transactions.create(formData)
         modal.close()
+        notifyChange()
         toast("Transaction created", "success")
         goToPage(1)
       }

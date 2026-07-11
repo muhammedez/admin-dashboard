@@ -13,7 +13,7 @@ import { useModalState } from "@/hooks/useModalState"
 export default function CategoriesPage() {
   const { user } = useAuth()
   const isAdmin = user?.role === "admin"
-  const { categories, setCategories } = useDashboard()
+  const { categories, setCategories, notifyChange } = useDashboard()
   const modal = useModalState<string>()
   const { toast } = useToast()
 
@@ -34,6 +34,7 @@ export default function CategoriesPage() {
         toast("Category created", "success")
       }
       modal.close()
+      notifyChange()
       load()
     } catch (e: any) {
       toast(e.message || "Failed to save", "error")
@@ -44,6 +45,7 @@ export default function CategoriesPage() {
     if (!confirm("Delete this category?")) return
     try {
       await api.categories.delete(id)
+      notifyChange()
       toast("Category deleted", "success")
       load()
     } catch (e: any) {

@@ -14,7 +14,7 @@ import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
 import { useModalState } from "@/hooks/useModalState"
 
 export function ProductsTable() {
-  const { products, productPage, productSearch, productCategory, setProducts, categories } = useDashboard()
+  const { products, productPage, productSearch, productCategory, setProducts, categories, notifyChange } = useDashboard()
   const { user } = useAuth()
   const isAdmin = user?.role === "admin"
   const searchParams = useSearchParams()
@@ -69,6 +69,7 @@ export function ProductsTable() {
       await api.products.delete(id)
       const target = products.data.length <= 1 && page > 1 ? page - 1 : page
       goToPage(target)
+      notifyChange()
       toast("Product deleted", "success")
     } catch (e: any) {
       toast(e.message || "Failed to delete", "error")
@@ -80,11 +81,13 @@ export function ProductsTable() {
       if (modal.editingId) {
         await api.products.update(modal.editingId, product)
         modal.close()
+        notifyChange()
         toast("Product updated", "success")
         load(page, search, category)
       } else {
         await api.products.create(product)
         modal.close()
+        notifyChange()
         toast("Product created", "success")
         goToPage(1)
       }
