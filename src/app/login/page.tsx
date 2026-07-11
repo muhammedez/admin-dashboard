@@ -44,7 +44,7 @@ export default function LoginPage() {
             <input
               type="email" required value={email}
               onChange={(e) => setEmail(e.target.value)}
-               className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400"
+               className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-gray-400"
             />
           </div>
           <div>
@@ -52,7 +52,7 @@ export default function LoginPage() {
             <input
               type="password" required value={password}
               onChange={(e) => setPassword(e.target.value)}
-               className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400"
+               className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-gray-400"
             />
           </div>
 
@@ -62,7 +62,7 @@ export default function LoginPage() {
 
           <button
             type="submit" disabled={loading}
-            className="flex w-full items-center justify-center gap-2 bg-emerald-600 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600"
+            className="flex w-full items-center justify-center gap-2 bg-emerald-600 py-2 text-sm font-medium !text-white hover:bg-emerald-700 disabled:opacity-50 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600"
           >
             <LogIn className="h-4 w-4" />
             {loading ? "Signing in..." : "Sign in"}

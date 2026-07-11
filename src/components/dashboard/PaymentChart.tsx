@@ -11,7 +11,7 @@ export function PaymentChart({ data }: { data: { paymentMethod: string; count: n
   if (!data.length) return null
 
   return (
-    <div className="border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+    <div className="border border-gray-200 bg-white p-6 dark:border-0 dark:bg-gray-900">
       <h3 className="mb-1 text-lg font-semibold dark:text-gray-100">Payment Methods</h3>
       <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">Distribution by transaction count</p>
       <div className="h-72">

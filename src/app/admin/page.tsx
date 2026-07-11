@@ -37,7 +37,7 @@ export default function AdminDashboard() {
               type="date"
               value={dateRange.from}
               onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
-               className="border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400 dark:[color-scheme:dark]"
+               className="border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm outline-none focus:border-gray-900 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-gray-400 dark:[color-scheme:dark]"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -46,12 +46,12 @@ export default function AdminDashboard() {
               type="date"
               value={dateRange.to}
               onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
-              className="border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400 dark:[color-scheme:dark]"
+              className="border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm outline-none focus:border-gray-900 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-gray-400 dark:[color-scheme:dark]"
             />
           </div>
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm font-medium hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+            className="flex items-center gap-1.5 border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm font-medium hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-700"
           >
             <Download className="h-4 w-4" /> Export CSV
           </button>

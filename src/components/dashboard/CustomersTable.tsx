@@ -80,8 +80,8 @@ export function CustomersTable() {
   }
 
   return (
-    <div className="border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+    <div className="border border-gray-200 bg-white dark:border-0 dark:bg-gray-900">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 px-6 py-4 dark:border-gray-800">
         <div>
           <h3 className="text-lg font-semibold dark:text-gray-100">Customers</h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">{customers.total} total customers</p>
@@ -94,12 +94,12 @@ export function CustomersTable() {
               placeholder="Search customers..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-56 border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-3 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500 dark:focus:border-gray-400"
+              className="w-56 border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-3 text-sm outline-none focus:border-gray-900 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-500 dark:focus:border-gray-400"
             />
           </div>
           <button
             onClick={() => { setShowForm(true); setEditing(null) }}
-            className="flex items-center gap-1.5 bg-emerald-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600"
+            className="flex items-center gap-1.5 bg-emerald-600 px-4 py-1.5 text-sm font-medium !text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600"
           >
             <Plus className="h-4 w-4" /> Add
           </button>
@@ -121,7 +121,7 @@ export function CustomersTable() {
       <div>
         <table className="w-full text-sm">
           <thead>
-            <tr className="h-10 border-b border-gray-200 text-left text-xs font-medium text-gray-400 dark:border-gray-700 dark:text-gray-500">
+            <tr className="h-10 border-b border-gray-200 text-left text-xs font-medium text-gray-400 dark:border-gray-800 dark:text-gray-500">
               <th className="px-6 py-3 w-10">No.</th>
               <th className="px-6 py-3">Customer</th>
               <th className="px-6 py-3">Email</th>
@@ -134,7 +134,7 @@ export function CustomersTable() {
           </thead>
           <tbody>
             {customers.data.map((customer: any, index: number) => (
-              <tr key={customer.id} className="h-10 border-b border-gray-200 dark:border-gray-700">
+              <tr key={customer.id} className="h-10 border-b border-gray-200 dark:border-gray-800">
                 <td className="px-6 py-2.5 text-gray-400 dark:text-gray-500">{(page - 1) * 10 + index + 1}</td>
                 <td className="px-6 py-2.5">
                   <span className="font-medium dark:text-gray-200">{customer.name}</span>
@@ -146,7 +146,7 @@ export function CustomersTable() {
                   <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium ${
                     customer.status === "active"
                       ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400"
-                      : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                      : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
                   }`}>
                     <span className={`h-1.5 w-1.5 ${customer.status === "active" ? "bg-green-500" : "bg-gray-400 dark:bg-gray-500"}`} />
                     {customer.status}
@@ -212,17 +212,17 @@ function CustomerForm({
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Name *</label>
           <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400" />
+            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-gray-400" />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Email *</label>
           <input required type="email" value={form.email} onChange={(e) => { setForm({ ...form, email: e.target.value }); setError("") }}
-            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400" />
+            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-gray-400" />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Status</label>
           <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
-            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-gray-400">
+            className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-gray-400">
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
@@ -231,11 +231,11 @@ function CustomerForm({
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
       <div className="mt-4 flex gap-2">
         <button disabled={saving} type="submit"
-          className="bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600">
+          className="bg-emerald-600 px-4 py-2 text-sm font-medium !text-white hover:bg-emerald-700 disabled:opacity-50 dark:bg-emerald-500 dark:text-white dark:hover:bg-emerald-600">
           {saving ? "Saving..." : "Save"}
         </button>
         <button type="button" onClick={onCancel}
-          className="border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+          className="border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-700">
           Cancel
         </button>
       </div>

@@ -13,7 +13,7 @@ export function SalesFeed() {
   const { recentTransactions: transactions } = useDashboard()
 
   return (
-    <div className="border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+    <div className="border border-gray-200 bg-white dark:border-0 dark:bg-gray-900">
       <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
         <div>
           <h3 className="text-lg font-semibold dark:text-gray-100">Live Sales Feed</h3>
