@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, ShoppingBag, Users, ArrowLeftRight, PanelLeftClose, PanelLeft, Tags, type LucideIcon } from "lucide-react"
+import { LayoutDashboard, ShoppingBag, Users, ArrowLeftRight, PanelLeftClose, PanelLeft, Tags, Settings, type LucideIcon } from "lucide-react"
 
 interface NavItem {
   label: string
@@ -22,6 +22,7 @@ const clientNav: NavItem[] = [
   { label: "Dashboard", href: "/client", icon: LayoutDashboard },
   { label: "Products", href: "/client/products", icon: ShoppingBag },
   { label: "Transactions", href: "/client/transactions", icon: ArrowLeftRight },
+  { label: "Settings", href: "/client/settings", icon: Settings },
 ]
 
 function NavLinks({ nav, pathname, onClick }: { nav: NavItem[]; pathname: string; onClick?: () => void }) {

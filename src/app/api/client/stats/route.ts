@@ -8,9 +8,6 @@ export async function GET(request: NextRequest) {
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
-  if (!session) {
-    return NextResponse.json({ error: "Invalid session" }, { status: 401 })
-  }
 
   const db = await getDb()
   const customer = await db.prepare("SELECT * FROM customers WHERE userId = ?").get(session.userId) as any
@@ -76,6 +73,19 @@ export async function GET(request: NextRequest) {
 
   const productCount = (await db.prepare("SELECT COUNT(*) as c FROM products").get() as any).c
 
+  const paymentMethods = await db.prepare(`
+    SELECT paymentMethod, COUNT(*) as count, COALESCE(SUM(amount),0) as revenue
+    FROM transactions WHERE customerName = ? ${tf.clause}
+    GROUP BY paymentMethod ORDER BY count DESC
+  `).all(custName, ...tf.params) as any[]
+
+  const categoryRevenue = await db.prepare(`
+    SELECT p.category, COALESCE(SUM(t.amount),0) as revenue, COUNT(t.id) as count
+    FROM transactions t JOIN products p ON t.productName = p.name
+    WHERE t.customerName = ? ${tf.clause}
+    GROUP BY p.category ORDER BY revenue DESC
+  `).all(custName, ...tf.params) as any[]
+
   const calcChange = (current: number, previous: number) => {
     if (!previous) return current > 0 ? 100 : 0
     return Math.round(((current - previous) / previous) * 1000) / 10
@@ -93,5 +103,7 @@ export async function GET(request: NextRequest) {
       ordersChange: txCount ? calcChange(txCount, prevTxCount) : 0,
     },
     revenueData,
+    categoryRevenue,
+    paymentMethods,
   })
 }

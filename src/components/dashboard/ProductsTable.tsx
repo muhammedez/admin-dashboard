@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import { Plus, Pencil, Trash2, Search, X } from "lucide-react"
+import Link from "next/link"
+import { Plus, Pencil, Trash2, Search, X, ShoppingCart } from "lucide-react"
 import { api } from "@/lib/api"
 import { useDashboard } from "@/lib/store"
 import { useAuth } from "@/lib/auth"
@@ -200,7 +201,7 @@ export function ProductsTable() {
 
       <div>
         {loading && !products.data.length ? (
-          <TableSkeleton rows={5} cols={isAdmin ? 8 : 7} />
+          <TableSkeleton rows={5} cols={8} />
         ) : (
           <>
             <div className="overflow-x-auto">
@@ -214,7 +215,7 @@ export function ProductsTable() {
                     <th className="px-6 py-3">Qty</th>
                     <th className="px-6 py-3">Status</th>
                     <th className="px-6 py-3">Created</th>
-                    {isAdmin && <th className="px-6 py-3 text-right">Actions</th>}
+                    <th className="px-6 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -224,7 +225,12 @@ export function ProductsTable() {
                     <tr key={product.id} className="h-10 border-b border-gray-200 dark:border-gray-700">
                       <td className="px-6 py-2.5 text-gray-400 dark:text-gray-500">{(page - 1) * 10 + index + 1}</td>
                       <td className="px-6 py-2.5">
-                        <span className="font-medium dark:text-gray-200">{product.name}</span>
+                        <Link
+                          href={isAdmin ? `/admin/products/${product.id}` : `/client/products/${product.id}`}
+                          className="font-medium text-gray-900 hover:text-emerald-600 dark:text-gray-200 dark:hover:text-emerald-400"
+                        >
+                          {product.name}
+                        </Link>
                         <span className="ml-2 text-gray-500 dark:text-gray-400">{product.id}</span>
                       </td>
                       <td className="px-6 py-2.5">
@@ -258,16 +264,32 @@ export function ProductsTable() {
                         </div>
                       </td>
                       <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{product.createdAt}</td>
-                      {isAdmin && (
-                        <td className="px-6 py-2.5 text-right">
-                          <button onClick={() => modal.openEdit(product.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          <button onClick={() => handleDelete(product.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </td>
-                      )}
+                      <td className="px-6 py-2.5 text-right whitespace-nowrap">
+                        {!isAdmin && (
+                          stockValue > 0 ? (
+                            <Link
+                              href={`/client/products/${product.id}`}
+                              className="inline-flex items-center gap-1 rounded bg-emerald-600 px-3 py-1.5 text-xs font-medium !text-white transition-colors hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600"
+                            >
+                              <ShoppingCart className="h-3.5 w-3.5" /> Buy Now
+                            </Link>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded bg-gray-200 px-3 py-1.5 text-xs font-medium text-gray-400 dark:bg-gray-800 dark:text-gray-600 cursor-not-allowed">
+                              <ShoppingCart className="h-3.5 w-3.5" /> Buy Now
+                            </span>
+                          )
+                        )}
+                        {isAdmin && (
+                          <>
+                            <button onClick={() => modal.openEdit(product.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button onClick={() => handleDelete(product.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-gray-500 dark:hover:bg-red-950 dark:hover:text-red-400">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </>
+                        )}
+                      </td>
                     </tr>
                     );
                   })}

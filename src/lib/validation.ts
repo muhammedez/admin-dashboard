@@ -71,3 +71,15 @@ export const createCategorySchema = z.object({
 export const updateCategorySchema = z.object({
   name: z.string().min(1, "Name is required").transform((s) => s.trim()),
 })
+
+export const placeOrderSchema = z.object({
+  productName: z.string().min(1, "Product name is required"),
+  quantity: z.number().int().min(1, "Quantity must be at least 1").default(1),
+  paymentMethod: z.string().min(1, "Payment method is required").default("Credit Card"),
+})
+
+export const updateProfileSchema = z.object({
+  name: z.string().min(1, "Name is required").optional(),
+  currentPassword: z.string().optional(),
+  newPassword: z.string().min(6, "Password must be at least 6 characters").optional(),
+})

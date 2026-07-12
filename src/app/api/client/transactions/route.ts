@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server"
 import { getDb } from "@/lib/db"
 import { getSessionUser } from "@/lib/api-auth"
+import { broadcastChange } from "@/lib/sse"
+import { validate, placeOrderSchema } from "@/lib/validation"
 import type { NextRequest } from "next/server"
 
 export async function GET(request: NextRequest) {
   const session = await getSessionUser(request)
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-  if (!session) {
-    return NextResponse.json({ error: "Invalid session" }, { status: 401 })
   }
 
   const db = await getDb()
@@ -44,4 +43,45 @@ export async function GET(request: NextRequest) {
   const data = await db.prepare(`SELECT * FROM transactions ${where} ORDER BY timestamp DESC, id DESC LIMIT ? OFFSET ?`).all(...params, limit, offset)
 
   return NextResponse.json({ data, total, page, limit, totalPages: Math.ceil(total / limit) })
+}
+
+export async function POST(request: NextRequest) {
+  const session = await getSessionUser(request)
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const db = await getDb()
+  const customer = await db.prepare("SELECT name FROM customers WHERE userId = ?").get(session.userId) as any
+  if (!customer) {
+    return NextResponse.json({ error: "No customer profile" }, { status: 404 })
+  }
+
+  const body = await request.json()
+  const parsed = validate(placeOrderSchema, body)
+  if ("error" in parsed) return parsed.error
+
+  const { productName, quantity, paymentMethod } = parsed.data
+
+  const product = await db.prepare("SELECT * FROM products WHERE name = ?").get(productName) as any
+  if (!product) return NextResponse.json({ error: `Product "${productName}" not found` }, { status: 404 })
+  if (product.stock < quantity) {
+    return NextResponse.json({ error: `Insufficient stock. Only ${product.stock} available` }, { status: 400 })
+  }
+
+  const amount = product.price * quantity
+  const id = `T-${Date.now()}`
+  const timestamp = new Date().toISOString()
+
+  await db.prepare(
+    "INSERT INTO transactions (id, customerName, productName, amount, status, timestamp, paymentMethod) VALUES (?, ?, ?, ?, ?, ?, ?)"
+  ).run(id, customer.name, productName, amount, "pending", timestamp, paymentMethod)
+
+  await db.prepare("UPDATE products SET stock = stock - ? WHERE name = ?").run(quantity, productName)
+
+  await db.prepare("UPDATE customers SET totalOrders = totalOrders + 1, totalSpent = totalSpent + ? WHERE name = ?").run(amount, customer.name)
+
+  const transaction = await db.prepare("SELECT * FROM transactions WHERE id = ?").get(id)
+  broadcastChange("products")
+  broadcastChange("customers")
+  broadcastChange("transactions")
+  return NextResponse.json(transaction, { status: 201 })
 }

@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
+import Link from "next/link"
 import { CheckCircle, Clock, XCircle, Search, Filter, Plus, Pencil, Trash2, X } from "lucide-react"
 import { api } from "@/lib/api"
 import { useDashboard } from "@/lib/store"
@@ -61,6 +62,9 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
     setLoading(false)
   }, [setTransactions, isAdmin])
 
+  const loadRef = useRef(load)
+  loadRef.current = load
+
   const { skipNext } = useDebouncedSearch(() => {
     setPage(1)
     load(1, search, filter)
@@ -84,7 +88,27 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
 
   useSSE((entity) => {
     if (entity === "products" || entity === "customers") fetchFormData()
+    if (entity === "transactions") loadRef.current(page, search, filter)
   })
+
+  useEffect(() => {
+    let id: ReturnType<typeof setInterval>
+    const tick = () => { loadRef.current(page, search, filter) }
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        id = setInterval(tick, 30000)
+        tick()
+      } else {
+        clearInterval(id)
+      }
+    }
+    id = setInterval(tick, 30000)
+    document.addEventListener("visibilitychange", onVisibility)
+    return () => {
+      clearInterval(id)
+      document.removeEventListener("visibilitychange", onVisibility)
+    }
+  }, [page, search, filter])
 
   useEffect(() => {
     const q = searchParams.get("search") || ""
@@ -222,7 +246,9 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
                     return (
                       <tr key={tx.id} className="h-10 border-b border-gray-200 dark:border-gray-700">
                         <td className="px-6 py-2.5 text-gray-400 dark:text-gray-500">{(page - 1) * 10 + index + 1}</td>
-                        <td className="px-6 py-2.5 font-medium dark:text-gray-200">{tx.id}</td>
+                        <td className="px-6 py-2.5 font-medium dark:text-gray-200">
+                          {isAdmin ? tx.id : <Link href={`/client/transactions/${tx.id}`} className="text-gray-900 hover:text-emerald-600 dark:text-gray-200 dark:hover:text-emerald-400">{tx.id}</Link>}
+                        </td>
                         <td className="px-6 py-2.5 dark:text-gray-300">{tx.customerName}</td>
                         <td className="px-6 py-2.5 text-gray-600 dark:text-gray-400">{tx.productName}</td>
                         <td className="px-6 py-2.5 font-medium dark:text-gray-200">${Number(tx.amount).toFixed(2)}</td>

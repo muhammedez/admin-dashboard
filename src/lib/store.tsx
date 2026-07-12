@@ -17,6 +17,8 @@ interface DashboardStore {
   paymentMethods: any[]
   dateRange: { from: string; to: string }
   setDateRange: (range: { from: string; to: string }) => void
+  clientDateRange: { from: string; to: string }
+  setClientDateRange: (range: { from: string; to: string }) => void
   products: EntityState
   customers: EntityState
   transactions: EntityState
@@ -24,8 +26,11 @@ interface DashboardStore {
   recentTransactions: any[]
   clientStats: any
   clientRevenueData: any[]
+  clientCategoryRevenue: any[]
+  clientPaymentMethods: any[]
   clientName: string
   clientTotalProducts: number
+  clientLoading: boolean
   productPage: number
   customerPage: number
   transactionPage: number
@@ -56,6 +61,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [categoryRevenue, setCategoryRevenue] = useState<any[]>([])
   const [paymentMethods, setPaymentMethods] = useState<any[]>([])
   const [dateRange, setDateRange] = useState({ from: "", to: "" })
+  const [clientDateRange, setClientDateRangeState] = useState({ from: "", to: "" })
 
   const [products, setProductsState] = useState<EntityState>(empty)
   const [customers, setCustomersState] = useState<EntityState>(empty)
@@ -64,7 +70,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [recentTransactions, setRecentTransactions] = useState<any[]>([])
   const [clientStats, setClientStats] = useState<any>({ totalSpent: 0, totalTransactions: 0, totalRevenue: 0, revenueChange: 0, ordersChange: 0 })
   const [clientRevenueData, setClientRevenueData] = useState<any[]>([])
+  const [clientCategoryRevenue, setClientCategoryRevenue] = useState<any[]>([])
+  const [clientPaymentMethods, setClientPaymentMethods] = useState<any[]>([])
   const [clientName, setClientName] = useState("")
+  const [clientLoading, setClientLoading] = useState(true)
   const [clientTotalProducts, setClientTotalProducts] = useState(0)
   const [productPage, setProductPage] = useState(1)
   const [customerPage, setCustomerPage] = useState(1)
@@ -100,17 +109,24 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     } catch { /* silent */ }
   }, [])
 
-  const fetchClientStats = useCallback(async () => {
+  const fetchClientStats = useCallback(async (from?: string, to?: string) => {
     try {
-      const res = await fetch("/api/client/stats")
+      const params = new URLSearchParams()
+      if (from) params.set("from", from)
+      if (to) params.set("to", to)
+      const qs = params.toString()
+      const res = await fetch(`/api/client/stats${qs ? `?${qs}` : ""}`)
       const data = await res.json()
       if (data.stats) {
         setClientStats(data.stats)
         setClientRevenueData(data.revenueData || [])
+        setClientCategoryRevenue(data.categoryRevenue || [])
+        setClientPaymentMethods(data.paymentMethods || [])
         setClientName(data.customerName || "")
         setClientTotalProducts(data.totalProducts || 0)
       }
     } catch { /* silent */ }
+    setClientLoading(false)
   }, [])
 
   const refreshAll = useCallback(async () => {
@@ -127,16 +143,19 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const notifyChange = useCallback(() => {
     refreshAll()
     refreshRecentTransactions()
-    fetchClientStats()
+    fetchClientStats(clientDateRange.from, clientDateRange.to)
     fetchClientTransactions()
-  }, [refreshAll, refreshRecentTransactions, fetchClientStats, fetchClientTransactions])
+  }, [refreshAll, refreshRecentTransactions, fetchClientStats, fetchClientTransactions, clientDateRange])
 
   useEffect(() => {
     refreshAll()
     refreshRecentTransactions()
-    fetchClientStats()
     fetchClientTransactions()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    fetchClientStats(clientDateRange.from, clientDateRange.to)
+  }, [clientDateRange, fetchClientStats])
 
   useEffect(() => {
     let id: ReturnType<typeof setInterval>
@@ -160,6 +179,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setDateRange(range)
   }, [])
 
+  const handleSetClientDateRange = useCallback((range: { from: string; to: string }) => {
+    setClientDateRangeState(range)
+  }, [])
+
   const handleSetProducts = useCallback((state: EntityState, page: number, search: string, category: string) => {
     setProductsState(state); setProductPage(page); setProductSearch(search); setProductCategory(category)
   }, [])
@@ -173,7 +196,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const ctx = useMemo(() => ({
     stats, revenueData, categoryRevenue, paymentMethods, dateRange, setDateRange: handleSetDateRange,
-    products, customers, transactions, categories, recentTransactions, clientStats, clientRevenueData, clientName, clientTotalProducts,
+    clientDateRange, setClientDateRange: handleSetClientDateRange,
+    products, customers, transactions, categories, recentTransactions, clientStats, clientRevenueData, clientCategoryRevenue, clientPaymentMethods, clientName, clientTotalProducts, clientLoading,
     productPage, customerPage, transactionPage,
     productSearch, customerSearch, transactionSearch,
     productCategory, transactionFilter,
@@ -184,13 +208,13 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     refreshRecentTransactions,
     notifyChange,
   }), [
-    stats, revenueData, categoryRevenue, paymentMethods, dateRange,
+    stats, revenueData, categoryRevenue, paymentMethods, dateRange, clientDateRange,
     products, customers, transactions, categories, recentTransactions,
-    clientStats, clientRevenueData, clientName, clientTotalProducts,
+    clientStats, clientRevenueData, clientCategoryRevenue, clientPaymentMethods, clientName, clientTotalProducts, clientLoading,
     productPage, customerPage, transactionPage,
     productSearch, customerSearch, transactionSearch,
     productCategory, transactionFilter,
-    handleSetDateRange, handleSetProducts, handleSetCustomers, handleSetTransactions, handleSetCategories,
+    handleSetDateRange, handleSetClientDateRange, handleSetProducts, handleSetCustomers, handleSetTransactions, handleSetCategories,
     refreshRecentTransactions, notifyChange,
   ])
 

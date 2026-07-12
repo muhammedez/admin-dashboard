@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server"
 import { getDb } from "@/lib/db"
-import { requireAdmin } from "@/lib/api-auth"
+import { getSessionUser } from "@/lib/api-auth"
 import type { NextRequest } from "next/server"
 
 export async function GET(request: NextRequest) {
-  const session = await requireAdmin(request)
-  if (session instanceof NextResponse) return session
+  const session = await getSessionUser(request)
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const db = await getDb()
   const rows = await db.prepare("SELECT id, name, category, price, stock, description, createdAt FROM products ORDER BY createdAt DESC").all()
