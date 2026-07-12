@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getDb } from "@/lib/db"
 import { requireAdmin } from "@/lib/api-auth"
 import { broadcastChange } from "@/lib/sse"
+import { validate, createProductSchema } from "@/lib/validation"
 import type { NextRequest } from "next/server"
 
 export async function GET(request: NextRequest) {
@@ -37,11 +38,9 @@ export async function POST(request: Request) {
   const session = await requireAdmin(request)
   if (session instanceof NextResponse) return session
   const body = await request.json()
-  const { name, category, price, stock, description } = body
-
-  if (!name || !category || price == null) {
-    return NextResponse.json({ error: "name, category, and price are required" }, { status: 400 })
-  }
+  const parsed = validate(createProductSchema, body)
+  if ("error" in parsed) return parsed.error
+  const { name, category, price, stock, description } = parsed.data
 
   const db = await getDb()
   const id = `P-${Date.now()}`
@@ -49,7 +48,7 @@ export async function POST(request: Request) {
 
   await db.prepare(
     "INSERT INTO products (id, name, category, price, stock, description, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
-  ).run(id, name, category, price, stock ?? 0, description ?? "", createdAt)
+  ).run(id, name, category, price, stock, description, createdAt)
 
   const product = await db.prepare("SELECT * FROM products WHERE id = ?").get(id)
   broadcastChange("products")

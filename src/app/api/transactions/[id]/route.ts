@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getDb } from "@/lib/db"
 import { requireAdmin } from "@/lib/api-auth"
 import { broadcastChange } from "@/lib/sse"
+import { validate, updateTransactionSchema } from "@/lib/validation"
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireAdmin(request)
@@ -18,12 +19,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   if (session instanceof NextResponse) return session
   const { id } = await params
   const body = await request.json()
+  const parsed = validate(updateTransactionSchema, body)
+  if ("error" in parsed) return parsed.error
+  const { customerName, productName, amount, status, paymentMethod } = parsed.data
   const db = await getDb()
 
   const existing = await db.prepare("SELECT * FROM transactions WHERE id = ?").get(id) as any
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 })
-
-  const { customerName, productName, amount, status, paymentMethod } = body
   const newAmount = amount ?? existing.amount
   await db.prepare(
     "UPDATE transactions SET customerName = ?, productName = ?, amount = ?, status = ?, paymentMethod = ? WHERE id = ?"

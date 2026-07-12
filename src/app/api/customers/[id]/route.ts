@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getDb } from "@/lib/db"
 import { requireAdmin } from "@/lib/api-auth"
 import { broadcastChange } from "@/lib/sse"
+import { validate, updateCustomerSchema } from "@/lib/validation"
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireAdmin(request)
@@ -19,12 +20,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   if (session instanceof NextResponse) return session
   const { id } = await params
   const body = await request.json()
+  const parsed = validate(updateCustomerSchema, body)
+  if ("error" in parsed) return parsed.error
+  const { name, email, status, totalOrders, totalSpent } = parsed.data
   const db = await getDb()
 
   const existing = await db.prepare("SELECT * FROM customers WHERE id = ?").get(id)
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 })
-
-  const { name, email, status, totalOrders, totalSpent } = body
 
   if (email && email !== (existing as any).email) {
     const dup = await db.prepare("SELECT id FROM customers WHERE email = ? AND id != ?").get(email, id)

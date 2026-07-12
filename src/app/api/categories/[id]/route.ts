@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getDb } from "@/lib/db"
 import { requireAdmin } from "@/lib/api-auth"
 import { broadcastChange } from "@/lib/sse"
+import { validate, updateCategorySchema } from "@/lib/validation"
 import type { NextRequest } from "next/server"
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -17,14 +18,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   if (session instanceof NextResponse) return session
   const { id } = await params
   const body = await request.json()
-  const { name } = body
-
-  if (!name || !name.trim()) {
-    return NextResponse.json({ error: "Name is required" }, { status: 400 })
-  }
+  const parsed = validate(updateCategorySchema, body)
+  if ("error" in parsed) return parsed.error
+  const { name } = parsed.data
 
   const db = await getDb()
-  const existing = await db.prepare("SELECT id FROM categories WHERE name = ? AND id != ?").get(name.trim(), id) as any
+  const existing = await db.prepare("SELECT id FROM categories WHERE name = ? AND id != ?").get(name, id) as any
   if (existing) {
     return NextResponse.json({ error: "Category already exists" }, { status: 409 })
   }

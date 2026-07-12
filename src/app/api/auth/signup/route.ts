@@ -1,16 +1,12 @@
 import { NextResponse } from "next/server"
 import { getDb, createSession, hashPassword } from "@/lib/db"
+import { validate, signupSchema } from "@/lib/validation"
 
 export async function POST(request: Request) {
-  const { name, email, password } = await request.json()
-
-  if (!name || !email || !password) {
-    return NextResponse.json({ error: "Name, email, and password are required" }, { status: 400 })
-  }
-
-  if (password.length < 6) {
-    return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 })
-  }
+  const body = await request.json()
+  const parsed = validate(signupSchema, body)
+  if ("error" in parsed) return parsed.error
+  const { name, email, password } = parsed.data
 
   const db = await getDb()
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getDb } from "@/lib/db"
 import { requireAdmin } from "@/lib/api-auth"
 import { broadcastChange } from "@/lib/sse"
+import { validate, createTransactionSchema } from "@/lib/validation"
 import type { NextRequest } from "next/server"
 
 export async function GET(request: NextRequest) {
@@ -44,14 +45,12 @@ export async function POST(request: Request) {
   const session = await requireAdmin(request)
   if (session instanceof NextResponse) return session
   const body = await request.json()
-  const { customerName, productName, amount, quantity, status, paymentMethod } = body
-
-  if (!customerName || !productName || amount == null) {
-    return NextResponse.json({ error: "customerName, productName, and amount are required" }, { status: 400 })
-  }
+  const parsed = validate(createTransactionSchema, body)
+  if ("error" in parsed) return parsed.error
+  const { customerName, productName, amount, quantity, status, paymentMethod } = parsed.data
 
   const db = await getDb()
-  const qty = Math.max(1, parseInt(quantity, 10) || 1)
+  const qty = quantity
 
   const product = await db.prepare("SELECT * FROM products WHERE name = ?").get(productName) as any
   if (product && product.stock < qty) {
@@ -63,7 +62,7 @@ export async function POST(request: Request) {
 
   await db.prepare(
     "INSERT INTO transactions (id, customerName, productName, amount, status, timestamp, paymentMethod) VALUES (?, ?, ?, ?, ?, ?, ?)"
-  ).run(id, customerName, productName, amount, status ?? "completed", timestamp, paymentMethod ?? "Credit Card")
+  ).run(id, customerName, productName, amount, status, timestamp, paymentMethod)
 
   if (product) {
     await db.prepare("UPDATE products SET stock = stock - ? WHERE name = ?").run(qty, productName)

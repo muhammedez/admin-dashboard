@@ -323,9 +323,10 @@ function TransactionForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const amount = parseFloat(form.amount)
+    const quantity = parseInt(form.quantity, 10) || 1
     if (!form.customerName || !form.productName || isNaN(amount) || amount <= 0) return
     setSaving(true)
-    await onSave({ ...form, amount })
+    await onSave({ ...form, amount, quantity })
     setSaving(false)
   }
 

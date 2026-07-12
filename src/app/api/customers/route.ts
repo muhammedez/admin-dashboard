@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getDb } from "@/lib/db"
 import { requireAdmin } from "@/lib/api-auth"
 import { broadcastChange } from "@/lib/sse"
+import { validate, createCustomerSchema } from "@/lib/validation"
 import type { NextRequest } from "next/server"
 
 export async function GET(request: NextRequest) {
@@ -35,11 +36,9 @@ export async function POST(request: Request) {
   const session = await requireAdmin(request)
   if (session instanceof NextResponse) return session
   const body = await request.json()
-  const { name, email, status } = body
-
-  if (!name || !email) {
-    return NextResponse.json({ error: "name and email are required" }, { status: 400 })
-  }
+  const parsed = validate(createCustomerSchema, body)
+  if ("error" in parsed) return parsed.error
+  const { name, email, status } = parsed.data
 
   const db = await getDb()
   const id = `C-${Date.now().toString().slice(-6)}`
@@ -48,7 +47,7 @@ export async function POST(request: Request) {
   try {
     await db.prepare(
       "INSERT INTO customers (id, name, email, totalOrders, totalSpent, joinedAt, status) VALUES (?, ?, ?, 0, 0, ?, ?)"
-    ).run(id, name, email, joinedAt, status ?? "active")
+    ).run(id, name, email, joinedAt, status)
   } catch (err: any) {
     if (err.message?.includes("UNIQUE")) {
       return NextResponse.json({ error: "Email already exists" }, { status: 409 })

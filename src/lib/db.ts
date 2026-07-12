@@ -149,11 +149,10 @@ export async function hashPassword(password: string): Promise<string> {
 }
 
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  try {
-    return await bcryptCompare(password, hash)
-  } catch {
-    return createHash("sha256").update(password).digest("hex") === hash
+  if (hash.startsWith("$2")) {
+    return bcryptCompare(password, hash)
   }
+  return createHash("sha256").update(password).digest("hex") === hash
 }
 
 export function generateToken(): string {
