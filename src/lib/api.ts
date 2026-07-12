@@ -1,9 +1,4 @@
 const BASE = "/api"
-let _token: string | null = null
-
-export function setApiToken(token: string | null) {
-  _token = token
-}
 
 function qs(params: Record<string, string | number | undefined>): string {
   const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== "")
@@ -12,7 +7,6 @@ function qs(params: Record<string, string | number | undefined>): string {
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json" }
-  if (_token) headers["Authorization"] = `Bearer ${_token}`
   const res = await fetch(`${BASE}${url}`, {
     headers: { ...headers, ...options?.headers as Record<string, string> },
     ...options,

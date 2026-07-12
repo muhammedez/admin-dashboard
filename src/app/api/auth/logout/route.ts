@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server"
 import { deleteSession } from "@/lib/db"
+import { getTokenFromRequest, clearTokenCookie } from "@/lib/api-auth"
 
 export async function POST(request: Request) {
-  const auth = request.headers.get("authorization")
-  if (auth?.startsWith("Bearer ")) {
-    await deleteSession(auth.slice(7))
+  const token = getTokenFromRequest(request)
+  if (token) {
+    await deleteSession(token)
   }
-  return NextResponse.json({ success: true })
+  const res = NextResponse.json({ success: true })
+  clearTokenCookie(res)
+  return res
 }

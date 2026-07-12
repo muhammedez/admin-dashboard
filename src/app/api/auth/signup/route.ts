@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getDb, createSession, hashPassword } from "@/lib/db"
 import { validate, signupSchema } from "@/lib/validation"
+import { setTokenCookie } from "@/lib/api-auth"
 
 export async function POST(request: Request) {
   const body = await request.json()
@@ -21,9 +22,9 @@ export async function POST(request: Request) {
   ).run(name, email, await hashPassword(password), userRole)
 
   const token = await createSession(Number(result.lastInsertRowid))
-
-  return NextResponse.json({
-    token,
+  const res = NextResponse.json({
     user: { id: Number(result.lastInsertRowid), name, email, role: userRole },
   }, { status: 201 })
+  setTokenCookie(res, token)
+  return res
 }

@@ -1,8 +1,8 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from "react"
-import { api, setApiToken } from "./api"
-import { useAuth } from "./auth"
+import { api } from "./api"
+
 
 interface EntityState {
   data: any[]
@@ -47,11 +47,6 @@ const empty: EntityState = { data: [], total: 0, totalPages: 0 }
 const StoreContext = createContext<DashboardStore | null>(null)
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
-  const { token } = useAuth()
-
-  useEffect(() => {
-    setApiToken(token)
-  }, [token])
 
   const [stats, setStats] = useState<any>({
     totalRevenue: 0, totalTransactions: 0, activeCustomers: 0, totalProducts: 0,
@@ -99,19 +94,15 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const fetchClientTransactions = useCallback(async () => {
     try {
-      const res = await fetch("/api/client/transactions?page=1&limit=10", {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
+      const res = await fetch("/api/client/transactions?page=1&limit=10")
       const result = await res.json()
       setTransactionsState(result)
     } catch { /* silent */ }
-  }, [token])
+  }, [])
 
   const fetchClientStats = useCallback(async () => {
     try {
-      const res = await fetch("/api/client/stats", {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
+      const res = await fetch("/api/client/stats")
       const data = await res.json()
       if (data.stats) {
         setClientStats(data.stats)
@@ -120,7 +111,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         setClientTotalProducts(data.totalProducts || 0)
       }
     } catch { /* silent */ }
-  }, [token])
+  }, [])
 
   const refreshAll = useCallback(async () => {
     const promises = [

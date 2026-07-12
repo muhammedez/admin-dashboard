@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { getDb, createSession, verifyPassword } from "@/lib/db"
+import { setTokenCookie } from "@/lib/api-auth"
 
 export async function POST(request: Request) {
   const { email, password } = await request.json()
@@ -16,9 +17,9 @@ export async function POST(request: Request) {
   }
 
   const token = await createSession(user.id)
-
-  return NextResponse.json({
-    token,
+  const res = NextResponse.json({
     user: { id: user.id, name: user.name, email: user.email, role: user.role },
   })
+  setTokenCookie(res, token)
+  return res
 }

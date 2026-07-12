@@ -53,10 +53,7 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
         const params = new URLSearchParams({ page: String(p), limit: "10" })
         if (q) params.set("search", q)
         if (f && f !== "all") params.set("status", f)
-        const token = localStorage.getItem("auth_token")
-        const res = await fetch(`/api/client/transactions?${params}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        })
+        const res = await fetch(`/api/client/transactions?${params}`)
         result = await res.json()
       }
       setTransactions(result, p, q, f)

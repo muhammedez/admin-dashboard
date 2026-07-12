@@ -16,11 +16,7 @@ export function SalesFeed({ customerName }: { customerName?: string }) {
 
   useEffect(() => {
     if (!customerName) return
-    const token = localStorage.getItem("auth_token")
-    if (!token) return
-    fetch("/api/client/transactions?limit=15", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetch("/api/client/transactions?limit=15")
       .then((r) => r.json())
       .then((data) => setClientTx(data.data || []))
       .catch(() => {})
