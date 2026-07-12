@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getDb } from "@/lib/db"
 import { requireAdmin } from "@/lib/api-auth"
+import { broadcastChange } from "@/lib/sse"
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireAdmin(request)
@@ -41,6 +42,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 
   const updated = await db.prepare("SELECT * FROM transactions WHERE id = ?").get(id)
+  broadcastChange("products")
+  broadcastChange("customers")
+  broadcastChange("transactions")
   return NextResponse.json(updated)
 }
 
@@ -58,5 +62,8 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   }
 
   await db.prepare("DELETE FROM transactions WHERE id = ?").run(id)
+  broadcastChange("products")
+  broadcastChange("customers")
+  broadcastChange("transactions")
   return NextResponse.json({ success: true })
 }

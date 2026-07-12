@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { CheckCircle, Clock, XCircle, Search, Filter, Plus, Pencil, Trash2, X } from "lucide-react"
 import { api } from "@/lib/api"
 import { useDashboard } from "@/lib/store"
@@ -12,6 +12,7 @@ import { Modal } from "@/components/ui/Modal"
 import { TableSkeleton } from "@/components/ui/Skeleton"
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
 import { useModalState } from "@/hooks/useModalState"
+import { useSSE } from "@/hooks/useSSE"
 
 const statusIcon: Record<string, any> = {
   completed: CheckCircle,
@@ -67,6 +68,26 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
     setPage(1)
     load(1, search, filter)
   }, [search, filter])
+
+  const [formCustomers, setFormCustomers] = useState<any[]>([])
+  const [formProducts, setFormProducts] = useState<any[]>([])
+
+  const fetchFormData = useCallback(async () => {
+    const [cust, prod] = await Promise.all([
+      api.customers.list({ limit: 100 }).then(r => r.data).catch(() => []),
+      api.products.list({ limit: 100 }).then(r => r.data).catch(() => []),
+    ])
+    setFormCustomers(cust)
+    setFormProducts(prod)
+  }, [])
+
+  useEffect(() => {
+    fetchFormData()
+  }, [fetchFormData])
+
+  useSSE((entity) => {
+    if (entity === "products" || entity === "customers") fetchFormData()
+  })
 
   useEffect(() => {
     const q = searchParams.get("search") || ""
@@ -170,6 +191,8 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
         title={modal.editingId ? "Edit Transaction" : "Add Transaction"}
       >
         <TransactionForm
+          customers={formCustomers}
+          products={formProducts}
           transaction={modal.editingId ? transactions.data.find((t: any) => t.id === modal.editingId) : null}
           onSave={handleSave}
           onCancel={modal.close}
@@ -244,33 +267,24 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
   )
 }
 
-const formDataCache = { customers: null as any[] | null, products: null as any[] | null }
-
 function TransactionForm({
+  customers,
+  products,
   transaction,
   onSave,
   onCancel,
 }: {
+  customers: any[]
+  products: any[]
   transaction: any | null
   onSave: (p: any) => Promise<void>
   onCancel: () => void
 }) {
-  const [customers, setCustomers] = useState<any[]>(formDataCache.customers || [])
-  const [products, setProducts] = useState<any[]>(formDataCache.products || [])
   const [stockWarning, setStockWarning] = useState("")
   const [form, setForm] = useState(
     transaction ? { ...transaction, amount: String(transaction.amount), quantity: String(transaction.quantity || 1) } : { customerName: "", productName: "", quantity: "1", amount: "", status: "completed", paymentMethod: "Credit Card" }
   )
   const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    if (!formDataCache.customers) {
-      api.customers.list({ limit: 100 }).then((r) => { formDataCache.customers = r.data; setCustomers(r.data) }).catch(() => {})
-    }
-    if (!formDataCache.products) {
-      api.products.list({ limit: 100 }).then((r) => { formDataCache.products = r.data; setProducts(r.data) }).catch(() => {})
-    }
-  }, [])
 
   const selectedProduct = products.find((p: any) => p.name === form.productName)
 

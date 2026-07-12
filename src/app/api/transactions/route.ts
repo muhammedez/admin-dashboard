@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getDb } from "@/lib/db"
 import { requireAdmin } from "@/lib/api-auth"
+import { broadcastChange } from "@/lib/sse"
 import type { NextRequest } from "next/server"
 
 export async function GET(request: NextRequest) {
@@ -74,5 +75,8 @@ export async function POST(request: Request) {
   }
 
   const transaction = await db.prepare("SELECT * FROM transactions WHERE id = ?").get(id)
+  broadcastChange("products")
+  broadcastChange("customers")
+  broadcastChange("transactions")
   return NextResponse.json(transaction, { status: 201 })
 }

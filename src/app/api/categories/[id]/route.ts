@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getDb } from "@/lib/db"
 import { requireAdmin } from "@/lib/api-auth"
+import { broadcastChange } from "@/lib/sse"
 import type { NextRequest } from "next/server"
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -29,6 +30,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 
   await db.prepare("UPDATE categories SET name = ? WHERE id = ?").run(name.trim(), id)
+  broadcastChange("categories")
   const category = await db.prepare("SELECT * FROM categories WHERE id = ?").get(id)
   if (!category) {
     return NextResponse.json({ error: "Category not found" }, { status: 404 })
@@ -57,5 +59,6 @@ export async function DELETE(request: NextRequest) {
   }
 
   await db.prepare("DELETE FROM categories WHERE id = ?").run(id)
+  broadcastChange("categories")
   return NextResponse.json({ success: true })
 }

@@ -12,6 +12,7 @@ import { Modal } from "@/components/ui/Modal"
 import { TableSkeleton } from "@/components/ui/Skeleton"
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
 import { useModalState } from "@/hooks/useModalState"
+import { useSSE } from "@/hooks/useSSE"
 
 export function ProductsTable() {
   const { products, productPage, productSearch, productCategory, setProducts, categories, notifyChange } = useDashboard()
@@ -61,6 +62,10 @@ export function ProductsTable() {
       setLoading(false)
     }
   }, [])
+
+  useSSE((entity) => {
+    if (entity === "products") loadRef.current(page, search, category)
+  })
 
   useEffect(() => {
     let id: ReturnType<typeof setInterval>

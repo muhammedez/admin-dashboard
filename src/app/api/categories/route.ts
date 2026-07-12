@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getDb } from "@/lib/db"
 import { requireAdmin } from "@/lib/api-auth"
+import { broadcastChange } from "@/lib/sse"
 import type { NextRequest } from "next/server"
 
 export async function GET() {
@@ -29,5 +30,6 @@ export async function POST(request: Request) {
   const createdAt = new Date().toISOString().split("T")[0]
   await db.prepare("INSERT INTO categories (id, name, createdAt) VALUES (?, ?, ?)").run(id, name.trim(), createdAt)
   const category = await db.prepare("SELECT * FROM categories WHERE id = ?").get(id)
+  broadcastChange("categories")
   return NextResponse.json(category, { status: 201 })
 }

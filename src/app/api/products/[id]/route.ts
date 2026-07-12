@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getDb } from "@/lib/db"
 import { requireAdmin } from "@/lib/api-auth"
+import { broadcastChange } from "@/lib/sse"
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -33,6 +34,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   )
 
   const updated = await db.prepare("SELECT * FROM products WHERE id = ?").get(id)
+  broadcastChange("products")
   return NextResponse.json(updated)
 }
 
@@ -45,5 +47,6 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
   await db.prepare("DELETE FROM products WHERE id = ?").run(id)
+  broadcastChange("products")
   return NextResponse.json({ success: true })
 }
