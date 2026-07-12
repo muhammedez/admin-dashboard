@@ -38,7 +38,7 @@ export function SalesFeed({ customerName }: { customerName?: string }) {
       </div>
       <div className="h-80 overflow-y-auto p-4 space-y-2">
         {transactions.slice(0, 15).map((tx: any) => {
-          const StatusIcon = statusIcon[tx.status as keyof typeof statusIcon]
+          const StatusIcon = statusIcon[tx.status] || statusIcon.completed
           return (
             <div key={tx.id} className="flex items-center gap-4 border-b border-gray-50 p-3 text-sm dark:border-gray-800">
               <div>
