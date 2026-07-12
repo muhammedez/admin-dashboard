@@ -18,7 +18,7 @@ function NotificationListener() {
 
   useSSE((entity, data) => {
     if (entity === "notification" && data?.message && data?.customerName) {
-      if ((data.customerName === clientName || data.customerName === user?.name) && !(data.message as string).startsWith("New order from")) {
+      if (data.customerName === clientName || data.customerName === user?.name) {
         pushNotification(data.message as string, data.transactionId as string | undefined, data.productName as string | undefined, data.amount as number | undefined, data.customerName as string | undefined)
         toast(data.message as string, "info")
       }

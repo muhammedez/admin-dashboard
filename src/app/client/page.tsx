@@ -6,6 +6,7 @@ import { RevenueChart } from "@/components/dashboard/RevenueChart"
 import { CategoryChart } from "@/components/dashboard/CategoryChart"
 import { PaymentChart } from "@/components/dashboard/PaymentChart"
 import { SalesFeed } from "@/components/dashboard/SalesFeed"
+import { ClientOrders } from "@/components/dashboard/ClientOrders"
 import { DollarSign, ShoppingCart, Package } from "lucide-react"
 
 export default function ClientDashboard() {
@@ -70,6 +71,8 @@ export default function ClientDashboard() {
             </div>
             {clientName && <SalesFeed customerName={clientName} />}
           </div>
+
+          {clientName && <ClientOrders customerName={clientName} />}
 
           <div className="grid gap-6 lg:grid-cols-2">
             <CategoryChart data={clientCategoryRevenue} />

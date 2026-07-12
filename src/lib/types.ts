@@ -23,7 +23,7 @@ export interface Transaction {
   customerName: string
   productName: string
   amount: number
-  status: "completed" | "pending" | "failed"
+  status: "completed" | "pending" | "failed" | "rejected" | "cancelled"
   timestamp: string
   paymentMethod: string
 }

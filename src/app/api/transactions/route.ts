@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit")) || 10))
   const search = searchParams.get("search") || ""
   const status = searchParams.get("status") || ""
+  const excludeStatus = searchParams.get("excludeStatus") || ""
   const customerName = searchParams.get("customerName") || ""
   const offset = (page - 1) * limit
 
@@ -27,6 +28,10 @@ export async function GET(request: NextRequest) {
   if (status && status !== "all") {
     conditions.push("status = ?")
     params.push(status)
+  }
+  if (excludeStatus) {
+    conditions.push("status != ?")
+    params.push(excludeStatus)
   }
   if (customerName) {
     conditions.push("customerName = ?")

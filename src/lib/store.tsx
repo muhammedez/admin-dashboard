@@ -33,6 +33,8 @@ interface DashboardStore {
   products: EntityState
   customers: EntityState
   transactions: EntityState
+  adminOrders: EntityState
+  clientOrders: EntityState
   categories: any[]
   recentTransactions: any[]
   clientStats: any
@@ -45,17 +47,25 @@ interface DashboardStore {
   productPage: number
   customerPage: number
   transactionPage: number
+  adminOrderPage: number
+  clientOrderPage: number
   productSearch: string
   customerSearch: string
   transactionSearch: string
+  adminOrderSearch: string
+  clientOrderSearch: string
   productCategory: string
   transactionFilter: string
   setProducts: (state: EntityState, page: number, search: string, category: string) => void
   setCustomers: (state: EntityState, page: number, search: string) => void
   setTransactions: (state: EntityState, page: number, search: string, filter: string) => void
+  setAdminOrders: (state: EntityState, page: number, search: string) => void
+  setClientOrders: (state: EntityState, page: number, search: string) => void
   setCategories: (data: any[]) => void
   refreshRecentTransactions: () => Promise<void>
   notifyChange: () => void
+  fetchAdminOrders: (page: number, search: string) => Promise<void>
+  fetchClientOrders: (page: number, search: string, customerName: string) => Promise<void>
   notifications: Notification[]
   pushNotification: (message: string, transactionId?: string, productName?: string, amount?: number, customerName?: string) => void
   markNotificationRead: (id: number) => void
@@ -80,6 +90,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [products, setProductsState] = useState<EntityState>(empty)
   const [customers, setCustomersState] = useState<EntityState>(empty)
   const [transactions, setTransactionsState] = useState<EntityState>(empty)
+  const [adminOrders, setAdminOrdersState] = useState<EntityState>(empty)
+  const [clientOrders, setClientOrdersState] = useState<EntityState>(empty)
   const [categories, setCategories] = useState<any[]>([])
   const [recentTransactions, setRecentTransactions] = useState<any[]>([])
   const [clientStats, setClientStats] = useState<any>({ totalSpent: 0, totalTransactions: 0, totalRevenue: 0, revenueChange: 0, ordersChange: 0 })
@@ -102,9 +114,13 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [productPage, setProductPage] = useState(1)
   const [customerPage, setCustomerPage] = useState(1)
   const [transactionPage, setTransactionPage] = useState(1)
+  const [adminOrderPage, setAdminOrderPage] = useState(1)
+  const [clientOrderPage, setClientOrderPage] = useState(1)
   const [productSearch, setProductSearch] = useState("")
   const [customerSearch, setCustomerSearch] = useState("")
   const [transactionSearch, setTransactionSearch] = useState("")
+  const [adminOrderSearch, setAdminOrderSearch] = useState("")
+  const [clientOrderSearch, setClientOrderSearch] = useState("")
   const [productCategory, setProductCategory] = useState("All")
   const [transactionFilter, setTransactionFilter] = useState("all")
 
@@ -120,7 +136,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const refreshRecentTransactions = useCallback(async () => {
     try {
-      const result = await api.transactions.list({ limit: 50 })
+      const result = await api.transactions.list({ limit: 50, excludeStatus: "pending" })
       setRecentTransactions(result.data)
     } catch { /* silent */ }
   }, [])
@@ -157,19 +173,41 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     const promises = [
       api.products.list({ page: 1, limit: 10 }).then((p) => setProductsState(p)).catch(() => {}),
       api.customers.list({ page: 1, limit: 10 }).then((c) => setCustomersState(c)).catch(() => {}),
-      api.transactions.list({ page: 1, limit: 10 }).then((t) => setTransactionsState(t)).catch(() => {}),
+      api.transactions.list({ page: 1, limit: 10, excludeStatus: "pending" }).then((t) => setTransactionsState(t)).catch(() => {}),
       api.categories.list().then((cat) => setCategories(cat.data)).catch(() => {}),
     ]
     await Promise.all(promises)
     await fetchStats(dateRange.from, dateRange.to)
   }, [fetchStats, dateRange])
 
+  const fetchAdminOrders = useCallback(async (page: number, search: string) => {
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: "10" })
+      if (search) params.set("search", search)
+      const res = await fetch(`/api/admin/orders?${params}`)
+      const result = await res.json()
+      setAdminOrdersState(result)
+    } catch { /* silent */ }
+  }, [])
+
+  const fetchClientOrders = useCallback(async (page: number, search: string, customerName: string) => {
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: "10", status: "pending" })
+      if (search) params.set("search", search)
+      const res = await fetch(`/api/client/transactions?${params}`)
+      const result = await res.json()
+      setClientOrdersState(result)
+    } catch { /* silent */ }
+  }, [])
+
   const notifyChange = useCallback(() => {
     refreshAll()
     refreshRecentTransactions()
     fetchClientStats(clientDateRange.from, clientDateRange.to)
     fetchClientTransactions()
-  }, [refreshAll, refreshRecentTransactions, fetchClientStats, fetchClientTransactions, clientDateRange])
+    fetchAdminOrders(adminOrderPage, adminOrderSearch)
+    if (clientName) fetchClientOrders(clientOrderPage, clientOrderSearch, clientName)
+  }, [refreshAll, refreshRecentTransactions, fetchClientStats, fetchClientTransactions, clientDateRange, adminOrderPage, adminOrderSearch, clientOrderPage, clientOrderSearch, clientName])
 
   useEffect(() => {
     refreshAll()
@@ -216,31 +254,44 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const handleSetTransactions = useCallback((state: EntityState, page: number, search: string, filter: string) => {
     setTransactionsState(state); setTransactionPage(page); setTransactionSearch(search); setTransactionFilter(filter)
   }, [])
+  const handleSetAdminOrders = useCallback((state: EntityState, page: number, search: string) => {
+    setAdminOrdersState(state); setAdminOrderPage(page); setAdminOrderSearch(search)
+  }, [])
+  const handleSetClientOrders = useCallback((state: EntityState, page: number, search: string) => {
+    setClientOrdersState(state); setClientOrderPage(page); setClientOrderSearch(search)
+  }, [])
   const handleSetCategories = useCallback((data: any[]) => setCategories(data), [])
 
   const ctx = useMemo(() => ({
     stats, revenueData, categoryRevenue, paymentMethods, dateRange, setDateRange: handleSetDateRange,
     clientDateRange, setClientDateRange: handleSetClientDateRange,
-    products, customers, transactions, categories, recentTransactions, clientStats, clientRevenueData, clientCategoryRevenue, clientPaymentMethods, clientName, clientTotalProducts, clientLoading,
-    productPage, customerPage, transactionPage,
-    productSearch, customerSearch, transactionSearch,
+    products, customers, transactions, adminOrders, clientOrders, categories, recentTransactions,
+    clientStats, clientRevenueData, clientCategoryRevenue, clientPaymentMethods, clientName, clientTotalProducts, clientLoading,
+    productPage, customerPage, transactionPage, adminOrderPage, clientOrderPage,
+    productSearch, customerSearch, transactionSearch, adminOrderSearch, clientOrderSearch,
     productCategory, transactionFilter,
     setProducts: handleSetProducts,
     setCustomers: handleSetCustomers,
     setTransactions: handleSetTransactions,
+    setAdminOrders: handleSetAdminOrders,
+    setClientOrders: handleSetClientOrders,
     setCategories: handleSetCategories,
     refreshRecentTransactions,
     notifyChange,
+    fetchAdminOrders,
+    fetchClientOrders,
     notifications, pushNotification, markNotificationRead,
   }), [
     stats, revenueData, categoryRevenue, paymentMethods, dateRange, clientDateRange,
-    products, customers, transactions, categories, recentTransactions,
+    products, customers, transactions, adminOrders, clientOrders, categories, recentTransactions,
     clientStats, clientRevenueData, clientCategoryRevenue, clientPaymentMethods, clientName, clientTotalProducts, clientLoading,
-    productPage, customerPage, transactionPage,
-    productSearch, customerSearch, transactionSearch,
+    productPage, customerPage, transactionPage, adminOrderPage, clientOrderPage,
+    productSearch, customerSearch, transactionSearch, adminOrderSearch, clientOrderSearch,
     productCategory, transactionFilter,
-    handleSetDateRange, handleSetClientDateRange, handleSetProducts, handleSetCustomers, handleSetTransactions, handleSetCategories,
-    refreshRecentTransactions, notifyChange, notifications, pushNotification, markNotificationRead,
+    handleSetDateRange, handleSetClientDateRange,
+    handleSetProducts, handleSetCustomers, handleSetTransactions, handleSetAdminOrders, handleSetClientOrders, handleSetCategories,
+    refreshRecentTransactions, notifyChange, fetchAdminOrders, fetchClientOrders,
+    notifications, pushNotification, markNotificationRead,
   ])
 
   return (

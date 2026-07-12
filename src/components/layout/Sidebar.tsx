@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, ShoppingBag, Users, ArrowLeftRight, PanelLeftClose, PanelLeft, Tags, Settings, type LucideIcon } from "lucide-react"
+import { LayoutDashboard, ShoppingBag, Users, ArrowLeftRight, PanelLeftClose, PanelLeft, Tags, Settings, ClipboardList, type LucideIcon } from "lucide-react"
 
 interface NavItem {
   label: string
@@ -14,6 +14,7 @@ const adminNav: NavItem[] = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Products", href: "/admin/products", icon: ShoppingBag },
   { label: "Customers", href: "/admin/customers", icon: Users },
+  { label: "Active Orders", href: "/admin/orders", icon: ClipboardList },
   { label: "Transactions", href: "/admin/transactions", icon: ArrowLeftRight },
   { label: "Categories", href: "/admin/categories", icon: Tags },
   { label: "Settings", href: "/admin/settings", icon: Settings },
@@ -22,6 +23,7 @@ const adminNav: NavItem[] = [
 const clientNav: NavItem[] = [
   { label: "Dashboard", href: "/client", icon: LayoutDashboard },
   { label: "Products", href: "/client/products", icon: ShoppingBag },
+  { label: "My Orders", href: "/client/orders", icon: ClipboardList },
   { label: "Transactions", href: "/client/transactions", icon: ArrowLeftRight },
   { label: "Settings", href: "/client/settings", icon: Settings },
 ]

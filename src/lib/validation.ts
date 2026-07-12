@@ -52,7 +52,7 @@ export const createTransactionSchema = z.object({
   productName: z.string().min(1, "Product name is required"),
   amount: z.number().positive("Amount must be positive"),
   quantity: z.number().int().min(1).optional().default(1),
-  status: z.enum(["completed", "pending", "failed"]).optional().default("completed"),
+  status: z.enum(["completed", "pending", "failed", "rejected", "cancelled"]).optional().default("completed"),
   paymentMethod: z.string().min(1).optional().default("Credit Card"),
 })
 
@@ -60,7 +60,7 @@ export const updateTransactionSchema = z.object({
   customerName: z.string().min(1).optional(),
   productName: z.string().min(1).optional(),
   amount: z.number().positive("Amount must be positive").optional(),
-  status: z.enum(["completed", "pending", "failed"]).optional(),
+  status: z.enum(["completed", "pending", "failed", "rejected", "cancelled"]).optional(),
   paymentMethod: z.string().min(1).optional(),
 })
 
@@ -76,6 +76,10 @@ export const placeOrderSchema = z.object({
   productName: z.string().min(1, "Product name is required"),
   quantity: z.number().int().min(1, "Quantity must be at least 1").default(1),
   paymentMethod: z.string().min(1, "Payment method is required").default("Credit Card"),
+})
+
+export const cancelOrderSchema = z.object({
+  transactionId: z.string().min(1, "Transaction ID is required"),
 })
 
 export const updateProfileSchema = z.object({

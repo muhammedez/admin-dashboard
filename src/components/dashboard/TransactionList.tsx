@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import Link from "next/link"
-import { CheckCircle, Clock, XCircle, Search, Filter, Plus, Pencil, Trash2, X, Check } from "lucide-react"
+import { CheckCircle, Clock, XCircle, Ban, Search, Filter, Plus, Pencil, Trash2, X, Check } from "lucide-react"
 import { api } from "@/lib/api"
 import { useDashboard } from "@/lib/store"
 import { useAuth } from "@/lib/auth"
@@ -19,12 +19,16 @@ const statusIcon: Record<string, any> = {
   completed: CheckCircle,
   pending: Clock,
   failed: XCircle,
+  rejected: XCircle,
+  cancelled: Ban,
 }
 
 const statusBg: Record<string, string> = {
   completed: "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400",
   pending: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400",
   failed: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400",
+  rejected: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400",
+  cancelled: "bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-400",
 }
 
 export function TransactionList({ customerName: filterCustomer }: { customerName?: string }) {
@@ -50,11 +54,13 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
           limit: 10,
           search: q || undefined,
           status: f !== "all" ? f : undefined,
+          excludeStatus: f === "all" ? "pending" : undefined,
         })
       } else {
         const params = new URLSearchParams({ page: String(p), limit: "10" })
         if (q) params.set("search", q)
         if (f && f !== "all") params.set("status", f)
+        if (f === "all") params.set("excludeStatus", "pending")
         const res = await fetch(`/api/client/transactions?${params}`)
         result = await res.json()
       }
@@ -208,8 +214,9 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
             >
               <option value="all">All</option>
               <option value="completed">Completed</option>
-              <option value="pending">Pending</option>
               <option value="failed">Failed</option>
+              <option value="rejected">Rejected</option>
+              <option value="cancelled">Cancelled</option>
             </select>
           </div>
           {isAdmin && (
@@ -431,6 +438,8 @@ function TransactionForm({
             <option value="completed">Completed</option>
             <option value="pending">Pending</option>
             <option value="failed">Failed</option>
+            <option value="rejected">Rejected</option>
+            <option value="cancelled">Cancelled</option>
           </select>
         </div>
         <div>

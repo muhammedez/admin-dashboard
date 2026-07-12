@@ -4,6 +4,7 @@ import { useDashboard } from "@/lib/store"
 import { StatCard } from "@/components/dashboard/StatCard"
 import { RevenueChart } from "@/components/dashboard/RevenueChart"
 import { SalesFeed } from "@/components/dashboard/SalesFeed"
+import { AdminOrders } from "@/components/dashboard/AdminOrders"
 import { CategoryChart } from "@/components/dashboard/CategoryChart"
 import { PaymentChart } from "@/components/dashboard/PaymentChart"
 import { downloadCSV } from "@/lib/csv"
@@ -70,6 +71,8 @@ export default function AdminDashboard() {
         </div>
         <SalesFeed />
       </div>
+
+      <AdminOrders />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <CategoryChart data={categoryRevenue} />

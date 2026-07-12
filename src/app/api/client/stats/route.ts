@@ -34,10 +34,10 @@ export async function GET(request: NextRequest) {
   const tf = dateFilter("timestamp")
   const custName = customer.name
 
-  const txCount = (await db.prepare(`SELECT COUNT(*) as c FROM transactions WHERE customerName = ? ${tf.clause}`).get(custName, ...tf.params) as any).c
-  const totalSpent = (await db.prepare(`SELECT COALESCE(SUM(amount),0) as s FROM transactions WHERE customerName = ? ${tf.clause}`).get(custName, ...tf.params) as any).s
+  const txCount = (await db.prepare(`SELECT COUNT(*) as c FROM transactions WHERE customerName = ? AND status != 'cancelled' ${tf.clause}`).get(custName, ...tf.params) as any).c
+  const totalSpent = (await db.prepare(`SELECT COALESCE(SUM(amount),0) as s FROM transactions WHERE customerName = ? AND status != 'cancelled' ${tf.clause}`).get(custName, ...tf.params) as any).s
 
-  const transactions = await db.prepare(`SELECT amount, timestamp FROM transactions WHERE customerName = ? ${tf.clause} ORDER BY timestamp`).all(custName, ...tf.params) as any[]
+  const transactions = await db.prepare(`SELECT amount, timestamp FROM transactions WHERE customerName = ? AND status != 'cancelled' ${tf.clause} ORDER BY timestamp`).all(custName, ...tf.params) as any[]
 
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
   const dayBuckets: Record<string, { revenue: number; count: number }> = {}
@@ -75,14 +75,14 @@ export async function GET(request: NextRequest) {
 
   const paymentMethods = await db.prepare(`
     SELECT paymentMethod, COUNT(*) as count, COALESCE(SUM(amount),0) as revenue
-    FROM transactions WHERE customerName = ? ${tf.clause}
+    FROM transactions WHERE customerName = ? AND status != 'cancelled' ${tf.clause}
     GROUP BY paymentMethod ORDER BY count DESC
   `).all(custName, ...tf.params) as any[]
 
   const categoryRevenue = await db.prepare(`
     SELECT p.category, COALESCE(SUM(t.amount),0) as revenue, COUNT(t.id) as count
     FROM transactions t JOIN products p ON t.productName = p.name
-    WHERE t.customerName = ? ${tf.clause}
+    WHERE t.customerName = ? AND t.status != 'cancelled' ${tf.clause}
     GROUP BY p.category ORDER BY revenue DESC
   `).all(custName, ...tf.params) as any[]
 

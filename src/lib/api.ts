@@ -46,7 +46,7 @@ export const api = {
     delete: (id: string) => request<{ success: boolean }>(`/categories/${id}?id=${id}`, { method: "DELETE" }),
   },
   transactions: {
-    list: (params?: { page?: number; limit?: number; search?: string; status?: string; customerName?: string }) =>
+    list: (params?: { page?: number; limit?: number; search?: string; status?: string; excludeStatus?: string; customerName?: string }) =>
       request<{ data: any[]; total: number; page: number; limit: number; totalPages: number }>(`/transactions${qs(params || {})}`),
     get: (id: string) => request<any>(`/transactions/${id}`),
     create: (data: any) => request<any>(`/transactions`, { method: "POST", body: JSON.stringify(data) }),

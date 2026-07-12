@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { useDashboard } from "@/lib/store"
-import { ArrowUpRight, Clock, CheckCircle, XCircle } from "lucide-react"
+import { ArrowUpRight, Clock, CheckCircle, XCircle, Ban } from "lucide-react"
 
 const statusIcon: Record<string, any> = {
   completed: CheckCircle,
   pending: Clock,
   failed: XCircle,
+  rejected: XCircle,
+  cancelled: Ban,
 }
 
 export function SalesFeed({ customerName }: { customerName?: string }) {
@@ -16,13 +18,15 @@ export function SalesFeed({ customerName }: { customerName?: string }) {
 
   useEffect(() => {
     if (!customerName) return
-    fetch("/api/client/transactions?limit=15")
+    fetch("/api/client/transactions?limit=15&excludeStatus=pending")
       .then((r) => r.json())
       .then((data) => setClientTx(data.data || []))
       .catch(() => {})
   }, [customerName])
 
-  const transactions = customerName ? clientTx : allTransactions
+  const transactions = (customerName ? clientTx : allTransactions).filter(
+    (tx: any) => tx.status !== "pending"
+  )
 
   return (
     <div className="border border-gray-200 bg-white dark:border-0 dark:bg-gray-900">
@@ -42,7 +46,7 @@ export function SalesFeed({ customerName }: { customerName?: string }) {
           return (
             <div key={tx.id} className="flex items-center gap-4 border-b border-gray-50 p-3 text-sm dark:border-gray-800">
               <div>
-                <StatusIcon className={`h-5 w-5 ${tx.status === "completed" ? "text-green-500" : tx.status === "pending" ? "text-amber-500" : "text-red-500"}`} />
+                <StatusIcon className={`h-5 w-5 ${tx.status === "completed" ? "text-green-500" : tx.status === "pending" ? "text-amber-500" : tx.status === "cancelled" ? "text-gray-400" : "text-red-500"}`} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate dark:text-gray-200">{tx.customerName}</p>

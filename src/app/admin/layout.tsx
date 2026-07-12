@@ -16,9 +16,12 @@ function NotificationListener() {
   const { toast } = useToast()
 
   useSSE((entity, data) => {
-    if (entity === "notification" && data?.message && (data.message as string).startsWith("New order from")) {
-      pushNotification(data.message as string, data.transactionId as string | undefined, data.productName as string | undefined, data.amount as number | undefined, data.customerName as string | undefined)
-      toast(data.message as string, "info")
+    if (entity === "notification" && data?.message) {
+      const msg = data.message as string
+      if (msg.startsWith("New order from") || msg === "Order approved" || msg === "Order rejected" || msg === "Order cancelled") {
+        pushNotification(msg, data.transactionId as string | undefined, data.productName as string | undefined, data.amount as number | undefined, data.customerName as string | undefined)
+        toast(msg, "info")
+      }
     }
   })
 
