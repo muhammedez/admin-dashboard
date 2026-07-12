@@ -111,7 +111,8 @@ async function initSchema(db: Db) {
       amount REAL NOT NULL,
       status TEXT NOT NULL DEFAULT 'completed',
       timestamp TEXT NOT NULL DEFAULT (datetime('now')),
-      paymentMethod TEXT NOT NULL DEFAULT 'Credit Card'
+      paymentMethod TEXT NOT NULL DEFAULT 'Credit Card',
+      quantity INTEGER NOT NULL DEFAULT 1
     );
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -137,6 +138,7 @@ async function initSchema(db: Db) {
   `)
 
   try { await db.exec("ALTER TABLE customers ADD COLUMN userId INTEGER REFERENCES users(id)") } catch { /* already exists */ }
+  try { await db.exec("ALTER TABLE transactions ADD COLUMN quantity INTEGER NOT NULL DEFAULT 1") } catch { /* already exists */ }
 
   const row = await db.prepare("SELECT COUNT(*) as cnt FROM products").get() as any
   if (!row || row.cnt === 0) {
@@ -261,6 +263,6 @@ async function seed(db: Db) {
     await db.prepare("INSERT OR IGNORE INTO customers (id, name, email, totalOrders, totalSpent, joinedAt, status, userId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").run(...c)
   }
   for (const t of transactions) {
-    await db.prepare("INSERT OR IGNORE INTO transactions (id, customerName, productName, amount, status, timestamp, paymentMethod) VALUES (?, ?, ?, ?, ?, ?, ?)").run(...t)
+    await db.prepare("INSERT OR IGNORE INTO transactions (id, customerName, productName, amount, status, timestamp, paymentMethod, quantity) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").run(...t, 1)
   }
 }

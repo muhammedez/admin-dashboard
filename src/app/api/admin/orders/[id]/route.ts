@@ -26,6 +26,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const customer = await db.prepare("SELECT * FROM customers WHERE name = ?").get(existing.customerName) as any
   if (customer && action === "reject") {
     await db.prepare("UPDATE customers SET totalOrders = MAX(0, totalOrders - 1), totalSpent = MAX(0, totalSpent - ?) WHERE name = ?").run(existing.amount, existing.customerName)
+    const product = await db.prepare("SELECT * FROM products WHERE name = ?").get(existing.productName) as any
+    if (product) {
+      await db.prepare("UPDATE products SET stock = stock + ? WHERE name = ?").run(existing.quantity || 1, existing.productName)
+    }
   }
 
   const updated = await db.prepare("SELECT * FROM transactions WHERE id = ?").get(id)

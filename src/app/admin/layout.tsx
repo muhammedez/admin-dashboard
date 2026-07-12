@@ -33,7 +33,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <ToastProvider>
-      <DashboardProvider>
+        <DashboardProvider role="admin">
         <NotificationListener />
         <div className="flex">
           <Sidebar role="admin" open={open} onClose={close} onToggle={toggle} />

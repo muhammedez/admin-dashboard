@@ -75,7 +75,7 @@ const empty: EntityState = { data: [], total: 0, totalPages: 0 }
 
 const StoreContext = createContext<DashboardStore | null>(null)
 
-export function DashboardProvider({ children }: { children: ReactNode }) {
+export function DashboardProvider({ children, role: providerRole }: { children: ReactNode; role?: string }) {
 
   const [stats, setStats] = useState<any>({
     totalRevenue: 0, totalTransactions: 0, activeCustomers: 0, totalProducts: 0,
@@ -135,11 +135,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const refreshRecentTransactions = useCallback(async () => {
+    if (providerRole !== "admin") return
     try {
       const result = await api.transactions.list({ limit: 50, excludeStatus: "pending" })
       setRecentTransactions(result.data)
     } catch { /* silent */ }
-  }, [])
+  }, [providerRole])
 
   const fetchClientTransactions = useCallback(async () => {
     try {
@@ -170,15 +171,21 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const refreshAll = useCallback(async () => {
-    const promises = [
+    const promises: Promise<any>[] = [
       api.products.list({ page: 1, limit: 10 }).then((p) => setProductsState(p)).catch(() => {}),
-      api.customers.list({ page: 1, limit: 10 }).then((c) => setCustomersState(c)).catch(() => {}),
-      api.transactions.list({ page: 1, limit: 10, excludeStatus: "pending" }).then((t) => setTransactionsState(t)).catch(() => {}),
       api.categories.list().then((cat) => setCategories(cat.data)).catch(() => {}),
     ]
+    if (providerRole === "admin") {
+      promises.push(
+        api.customers.list({ page: 1, limit: 10 }).then((c) => setCustomersState(c)).catch(() => {}),
+        api.transactions.list({ page: 1, limit: 10, excludeStatus: "pending" }).then((t) => setTransactionsState(t)).catch(() => {}),
+      )
+    }
     await Promise.all(promises)
-    await fetchStats(dateRange.from, dateRange.to)
-  }, [fetchStats, dateRange])
+    if (providerRole === "admin") {
+      await fetchStats(dateRange.from, dateRange.to)
+    }
+  }, [fetchStats, dateRange, providerRole])
 
   const fetchAdminOrders = useCallback(async (page: number, search: string) => {
     try {
@@ -202,12 +209,15 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const notifyChange = useCallback(() => {
     refreshAll()
-    refreshRecentTransactions()
+    if (providerRole === "admin") {
+      refreshRecentTransactions()
+      fetchAdminOrders(adminOrderPage, adminOrderSearch)
+    } else {
+      fetchClientTransactions()
+      if (clientName) fetchClientOrders(clientOrderPage, clientOrderSearch, clientName)
+    }
     fetchClientStats(clientDateRange.from, clientDateRange.to)
-    fetchClientTransactions()
-    fetchAdminOrders(adminOrderPage, adminOrderSearch)
-    if (clientName) fetchClientOrders(clientOrderPage, clientOrderSearch, clientName)
-  }, [refreshAll, refreshRecentTransactions, fetchClientStats, fetchClientTransactions, clientDateRange, adminOrderPage, adminOrderSearch, clientOrderPage, clientOrderSearch, clientName])
+  }, [refreshAll, refreshRecentTransactions, fetchClientStats, fetchClientTransactions, clientDateRange, adminOrderPage, adminOrderSearch, clientOrderPage, clientOrderSearch, clientName, providerRole])
 
   useEffect(() => {
     refreshAll()

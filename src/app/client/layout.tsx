@@ -18,6 +18,8 @@ function NotificationListener() {
 
   useSSE((entity, data) => {
     if (entity === "notification" && data?.message && data?.customerName) {
+      const msg = data.message as string
+      if (msg.startsWith("New order from")) return
       if (data.customerName === clientName || data.customerName === user?.name) {
         pushNotification(data.message as string, data.transactionId as string | undefined, data.productName as string | undefined, data.amount as number | undefined, data.customerName as string | undefined)
         toast(data.message as string, "info")
@@ -33,7 +35,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <ToastProvider>
-      <DashboardProvider>
+        <DashboardProvider role="client">
         <NotificationListener />
         <div className="flex">
           <Sidebar role="client" open={open} onClose={close} onToggle={toggle} />

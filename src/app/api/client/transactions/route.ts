@@ -77,8 +77,8 @@ export async function POST(request: NextRequest) {
   const timestamp = new Date().toISOString()
 
   await db.prepare(
-    "INSERT INTO transactions (id, customerName, productName, amount, status, timestamp, paymentMethod) VALUES (?, ?, ?, ?, ?, ?, ?)"
-  ).run(id, customer.name, productName, amount, "pending", timestamp, paymentMethod)
+    "INSERT INTO transactions (id, customerName, productName, amount, status, timestamp, paymentMethod, quantity) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+  ).run(id, customer.name, productName, amount, "pending", timestamp, paymentMethod, quantity)
 
   await db.prepare("UPDATE products SET stock = stock - ? WHERE name = ?").run(quantity, productName)
 

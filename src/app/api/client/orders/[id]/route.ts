@@ -22,7 +22,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
   const product = await db.prepare("SELECT * FROM products WHERE name = ?").get(existing.productName) as any
   if (product) {
-    await db.prepare("UPDATE products SET stock = stock + 1 WHERE name = ?").run(existing.productName)
+    await db.prepare("UPDATE products SET stock = stock + ? WHERE name = ?").run(existing.quantity || 1, existing.productName)
   }
 
   broadcastChange("products")
