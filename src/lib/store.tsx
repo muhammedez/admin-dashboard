@@ -16,6 +16,9 @@ export interface Notification {
   transactionId?: string
   read: boolean
   timestamp: number
+  productName?: string
+  amount?: number
+  customerName?: string
 }
 
 interface DashboardStore {
@@ -54,7 +57,7 @@ interface DashboardStore {
   refreshRecentTransactions: () => Promise<void>
   notifyChange: () => void
   notifications: Notification[]
-  pushNotification: (message: string, transactionId?: string) => void
+  pushNotification: (message: string, transactionId?: string, productName?: string, amount?: number, customerName?: string) => void
   markNotificationRead: (id: number) => void
 }
 
@@ -87,9 +90,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [clientLoading, setClientLoading] = useState(true)
   const [notifications, setNotifications] = useState<Notification[]>([])
 
-  const pushNotification = useCallback((message: string, transactionId?: string) => {
+  const pushNotification = useCallback((message: string, transactionId?: string, productName?: string, amount?: number, customerName?: string) => {
     const id = Date.now() + Math.random()
-    setNotifications((prev) => [{ id, message, transactionId, read: false, timestamp: Date.now() }, ...prev])
+    setNotifications((prev) => [{ id, message, transactionId, read: false, timestamp: Date.now(), productName, amount, customerName }, ...prev])
   }, [])
 
   const markNotificationRead = useCallback((id: number) => {

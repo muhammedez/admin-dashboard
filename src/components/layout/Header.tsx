@@ -2,20 +2,17 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Bell, Moon, Sun, LogOut, Menu, Info, CheckCircle, XCircle } from "lucide-react"
+import { Bell, Moon, Sun, LogOut, Menu, Info, CheckCircle, XCircle, ShoppingCart } from "lucide-react"
 import { useTheme } from "@/lib/theme"
 import { useAuth } from "@/lib/auth"
 import { useSidebar } from "@/lib/sidebar"
 import { useDashboard } from "@/lib/store"
 
-const notifIcon: Record<string, typeof CheckCircle> = {
-  "Order approved": CheckCircle,
-  "Order rejected": XCircle,
-}
-
-const notifColor: Record<string, string> = {
-  "Order approved": "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-  "Order rejected": "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+function notifConfig(message: string) {
+  if (message.startsWith("New order from")) return { icon: ShoppingCart, color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" }
+  if (message === "Order approved") return { icon: CheckCircle, color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" }
+  if (message === "Order rejected") return { icon: XCircle, color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" }
+  return { icon: Info, color: "bg-gray-100 dark:bg-gray-800" }
 }
 
 export function Header() {
@@ -70,7 +67,7 @@ export function Header() {
           )}
         </button>
         {notifOpen && (
-          <div className="absolute right-0 top-full mt-2 w-80 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900">
+          <div className="absolute right-0 top-full mt-2 w-96 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900">
             <div className="border-b border-gray-200 px-4 py-3 dark:border-gray-700">
               <p className="text-sm font-semibold dark:text-gray-100">Notifications</p>
             </div>
@@ -79,23 +76,28 @@ export function Header() {
                 <p className="px-4 py-6 text-center text-sm text-gray-400">No notifications</p>
               ) : (
                 notifications.map((n) => {
-                  const Icon = notifIcon[n.message] || Info
+                  const { icon: Icon, color: notifColor } = notifConfig(n.message)
                   return (
                     <button
                       key={n.id}
                       onClick={() => {
                         markNotificationRead(n.id)
                         setNotifOpen(false)
-                        if (n.transactionId) router.push(`/client/transactions/${n.transactionId}`)
+                        if (n.transactionId) router.push(`/${user?.role === "admin" ? "admin" : "client"}/transactions/${n.transactionId}`)
                       }}
                       className={`flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 ${!n.read ? "bg-blue-50/50 dark:bg-blue-950/20" : ""}`}
                     >
-                      <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${notifColor[n.message] || "bg-gray-100 dark:bg-gray-800"}`}>
+                      <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${notifColor}`}>
                         <Icon className="h-4 w-4" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium dark:text-gray-200">{n.message}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {(n.productName || n.amount) && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            {n.productName}{n.amount ? ` — $${n.amount.toFixed(2)}` : ""}
+                          </p>
+                        )}
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                           {new Date(n.timestamp).toLocaleString()}
                         </p>
                       </div>

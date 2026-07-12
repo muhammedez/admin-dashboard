@@ -50,7 +50,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   if (status && status !== existing.status) {
     const msg = status === "completed" ? "Order approved" : status === "failed" ? "Order rejected" : ""
     if (msg) {
-      broadcastChange("notification", { customerName: existing.customerName, message: msg, transactionId: id })
+      broadcastChange("notification", { customerName: existing.customerName, message: msg, transactionId: id, productName: existing.productName, amount: existing.amount })
     }
   }
   return NextResponse.json(updated)

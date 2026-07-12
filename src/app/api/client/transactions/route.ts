@@ -83,5 +83,12 @@ export async function POST(request: NextRequest) {
   broadcastChange("products")
   broadcastChange("customers")
   broadcastChange("transactions")
+  broadcastChange("notification", {
+    customerName: customer.name,
+    message: `New order from ${customer.name}`,
+    transactionId: id,
+    productName,
+    amount,
+  })
   return NextResponse.json(transaction, { status: 201 })
 }
