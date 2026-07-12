@@ -86,13 +86,14 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
   const [formProducts, setFormProducts] = useState<any[]>([])
 
   const fetchFormData = useCallback(async () => {
-    const [cust, prod] = await Promise.all([
-      api.customers.list({ limit: 100 }).then(r => r.data).catch(() => []),
-      api.products.list({ limit: 100 }).then(r => r.data).catch(() => []),
-    ])
+    let cust: any[] = []
+    const prod = await api.products.list({ limit: 100 }).then(r => r.data).catch(() => [])
+    if (isAdmin) {
+      cust = await api.customers.list({ limit: 100 }).then(r => r.data).catch(() => [])
+    }
     setFormCustomers(cust)
     setFormProducts(prod)
-  }, [])
+  }, [isAdmin])
 
   useEffect(() => {
     fetchFormData()
