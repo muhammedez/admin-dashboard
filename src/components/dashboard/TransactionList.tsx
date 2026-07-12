@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import Link from "next/link"
-import { CheckCircle, Clock, XCircle, Search, Filter, Plus, Pencil, Trash2, X } from "lucide-react"
+import { CheckCircle, Clock, XCircle, Search, Filter, Plus, Pencil, Trash2, X, Check } from "lucide-react"
 import { api } from "@/lib/api"
 import { useDashboard } from "@/lib/store"
 import { useAuth } from "@/lib/auth"
@@ -38,6 +38,7 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
   const [page, setPage] = useState(transactionPage || 1)
   const modal = useModalState<string>()
   const { toast } = useToast()
+  const prevStatuses = useRef<Record<string, string>>({})
 
   const load = useCallback(async (p: number, q: string, f: string) => {
     setLoading(true)
@@ -56,6 +57,11 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
         if (f && f !== "all") params.set("status", f)
         const res = await fetch(`/api/client/transactions?${params}`)
         result = await res.json()
+      }
+      if (!isAdmin && result.data) {
+        for (const tx of result.data) {
+          prevStatuses.current[tx.id] = tx.status
+        }
       }
       setTransactions(result, p, q, f)
     } catch { /* silent */ }
@@ -124,6 +130,17 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
   const goToPage = (p: number) => {
     setPage(p)
     load(p, search, filter)
+  }
+
+  const handleQuickStatus = async (id: string, status: string) => {
+    try {
+      await api.transactions.update(id, { status })
+      notifyChange()
+      toast(`Order ${status}`, "success")
+      load(page, search, filter)
+    } catch (e: any) {
+      toast(e.message || "Failed to update", "error")
+    }
   }
 
   const handleDelete = async (id: string) => {
@@ -264,6 +281,24 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
                         </td>
                         {isAdmin && (
                         <td className="px-6 py-2.5 text-right whitespace-nowrap">
+                          {tx.status === "pending" && (
+                            <>
+                              <button
+                                onClick={() => handleQuickStatus(tx.id, "completed")}
+                                className="rounded p-1.5 text-emerald-600 transition-colors hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950"
+                                title="Approve"
+                              >
+                                <Check className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => handleQuickStatus(tx.id, "failed")}
+                                className="rounded p-1.5 text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+                                title="Reject"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </>
+                          )}
                           <button onClick={() => modal.openEdit(tx.id)} className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200">
                           <Pencil className="h-4 w-4" />
                         </button>

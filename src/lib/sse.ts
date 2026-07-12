@@ -5,8 +5,8 @@ export function addClient(controller: ReadableStreamController<Uint8Array>) {
   return () => clients.delete(controller)
 }
 
-export function broadcastChange(entity: string) {
-  const msg = new TextEncoder().encode(`data: ${JSON.stringify({ entity })}\n\n`)
+export function broadcastChange(entity: string, data?: Record<string, unknown>) {
+  const msg = new TextEncoder().encode(`data: ${JSON.stringify({ entity, ...data })}\n\n`)
   for (const client of clients) {
     try {
       client.enqueue(msg)

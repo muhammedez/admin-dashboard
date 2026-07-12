@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react"
 
-export function useSSE(onEvent: (entity: string) => void) {
+export function useSSE(onEvent: (entity: string, data?: Record<string, unknown>) => void) {
   const onEventRef = useRef(onEvent)
   onEventRef.current = onEvent
 
@@ -12,8 +12,8 @@ export function useSSE(onEvent: (entity: string) => void) {
       es = new EventSource("/api/events")
       es.onmessage = (e) => {
         try {
-          const { entity } = JSON.parse(e.data)
-          onEventRef.current(entity)
+          const { entity, ...rest } = JSON.parse(e.data)
+          onEventRef.current(entity, Object.keys(rest).length ? rest : undefined)
         } catch {}
       }
       es.onerror = () => {

@@ -10,6 +10,14 @@ interface EntityState {
   totalPages: number
 }
 
+export interface Notification {
+  id: number
+  message: string
+  transactionId?: string
+  read: boolean
+  timestamp: number
+}
+
 interface DashboardStore {
   stats: any
   revenueData: any[]
@@ -45,6 +53,9 @@ interface DashboardStore {
   setCategories: (data: any[]) => void
   refreshRecentTransactions: () => Promise<void>
   notifyChange: () => void
+  notifications: Notification[]
+  pushNotification: (message: string, transactionId?: string) => void
+  markNotificationRead: (id: number) => void
 }
 
 const empty: EntityState = { data: [], total: 0, totalPages: 0 }
@@ -74,6 +85,16 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [clientPaymentMethods, setClientPaymentMethods] = useState<any[]>([])
   const [clientName, setClientName] = useState("")
   const [clientLoading, setClientLoading] = useState(true)
+  const [notifications, setNotifications] = useState<Notification[]>([])
+
+  const pushNotification = useCallback((message: string, transactionId?: string) => {
+    const id = Date.now() + Math.random()
+    setNotifications((prev) => [{ id, message, transactionId, read: false, timestamp: Date.now() }, ...prev])
+  }, [])
+
+  const markNotificationRead = useCallback((id: number) => {
+    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n))
+  }, [])
   const [clientTotalProducts, setClientTotalProducts] = useState(0)
   const [productPage, setProductPage] = useState(1)
   const [customerPage, setCustomerPage] = useState(1)
@@ -207,6 +228,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setCategories: handleSetCategories,
     refreshRecentTransactions,
     notifyChange,
+    notifications, pushNotification, markNotificationRead,
   }), [
     stats, revenueData, categoryRevenue, paymentMethods, dateRange, clientDateRange,
     products, customers, transactions, categories, recentTransactions,
@@ -215,7 +237,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     productSearch, customerSearch, transactionSearch,
     productCategory, transactionFilter,
     handleSetDateRange, handleSetClientDateRange, handleSetProducts, handleSetCustomers, handleSetTransactions, handleSetCategories,
-    refreshRecentTransactions, notifyChange,
+    refreshRecentTransactions, notifyChange, notifications, pushNotification, markNotificationRead,
   ])
 
   return (

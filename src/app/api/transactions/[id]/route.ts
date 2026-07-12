@@ -43,10 +43,16 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     await db.prepare("UPDATE customers SET totalSpent = totalSpent - ? + ? WHERE name = ?").run(existing.amount, newAmount, existing.customerName)
   }
 
-  const updated = await db.prepare("SELECT * FROM transactions WHERE id = ?").get(id)
+  const updated = await db.prepare("SELECT * FROM transactions WHERE id = ?").get(id) as any
   broadcastChange("products")
   broadcastChange("customers")
   broadcastChange("transactions")
+  if (status && status !== existing.status) {
+    const msg = status === "completed" ? "Order approved" : status === "failed" ? "Order rejected" : ""
+    if (msg) {
+      broadcastChange("notification", { customerName: existing.customerName, message: msg, transactionId: id })
+    }
+  }
   return NextResponse.json(updated)
 }
 
