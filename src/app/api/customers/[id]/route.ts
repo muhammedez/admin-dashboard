@@ -7,12 +7,12 @@ import { validate, updateCustomerSchema } from "@/lib/validation"
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireAdmin(request)
   if (session instanceof NextResponse) return session
-
   const { id } = await params
   const db = await getDb()
   const customer = await db.prepare("SELECT * FROM customers WHERE id = ?").get(id)
   if (!customer) return NextResponse.json({ error: "Not found" }, { status: 404 })
-  return NextResponse.json(customer)
+  const transactions = await db.prepare("SELECT * FROM transactions WHERE customerName = ? ORDER BY timestamp DESC LIMIT 20").all((customer as any).name)
+  return NextResponse.json({ customer, transactions })
 }
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -25,22 +25,17 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const { name, email, status, totalOrders, totalSpent } = parsed.data
   const db = await getDb()
 
-  const existing = await db.prepare("SELECT * FROM customers WHERE id = ?").get(id)
+  const existing = await db.prepare("SELECT * FROM customers WHERE id = ?").get(id) as any
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 })
-
-  if (email && email !== (existing as any).email) {
-    const dup = await db.prepare("SELECT id FROM customers WHERE email = ? AND id != ?").get(email, id)
-    if (dup) return NextResponse.json({ error: "Email already in use" }, { status: 409 })
-  }
 
   await db.prepare(
     "UPDATE customers SET name = ?, email = ?, status = ?, totalOrders = ?, totalSpent = ? WHERE id = ?"
   ).run(
-    name ?? (existing as any).name,
-    email ?? (existing as any).email,
-    status ?? (existing as any).status,
-    totalOrders ?? (existing as any).totalOrders,
-    totalSpent ?? (existing as any).totalSpent,
+    name ?? existing.name,
+    email ?? existing.email,
+    status ?? existing.status,
+    totalOrders ?? existing.totalOrders,
+    totalSpent ?? existing.totalSpent,
     id,
   )
 

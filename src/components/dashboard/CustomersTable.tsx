@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import Link from "next/link"
 import { Search, Mail, Plus, Pencil, Trash2, X } from "lucide-react"
 import { api } from "@/lib/api"
 import { useDashboard } from "@/lib/store"
@@ -159,7 +160,13 @@ export function CustomersTable() {
                     <tr key={customer.id} className="h-10 border-b border-gray-200 dark:border-gray-700">
                       <td className="px-6 py-2.5 text-gray-400 dark:text-gray-500">{(page - 1) * 10 + index + 1}</td>
                       <td className="px-6 py-2.5">
-                        <span className="font-medium dark:text-gray-200">{customer.name}</span>
+                        {isAdmin ? (
+                          <Link href={`/admin/customers/${customer.id}`} className="font-medium text-gray-900 hover:text-emerald-600 dark:text-gray-200 dark:hover:text-emerald-400">
+                            {customer.name}
+                          </Link>
+                        ) : (
+                          <span className="font-medium dark:text-gray-200">{customer.name}</span>
+                        )}
                       </td>
                       <td className="px-6 py-2.5 text-gray-500 dark:text-gray-400">{customer.email}</td>
                       <td className="px-6 py-2.5 dark:text-gray-300">{customer.totalOrders}</td>
