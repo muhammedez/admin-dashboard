@@ -4,13 +4,14 @@ import { useState } from "react"
 import { useAuth } from "@/lib/auth"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { LogIn } from "lucide-react"
+import { LogIn, Eye, EyeOff } from "lucide-react"
 
 export default function LoginPage() {
   const { login } = useAuth()
   const router = useRouter()
   const [email, setEmail] = useState("admin@dashboard.com")
   const [password, setPassword] = useState("admin123")
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -49,11 +50,16 @@ export default function LoginPage() {
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Password</label>
-            <input
-              type="password" required value={password}
-              onChange={(e) => setPassword(e.target.value)}
-               className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-gray-400"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"} required value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                 className="w-full border border-gray-200 bg-gray-50 px-3 py-2 pr-9 text-sm outline-none focus:border-gray-900 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-gray-400"
+              />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
           {error && (

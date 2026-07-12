@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth"
 import { useToast } from "@/lib/toast"
 import { User, Lock, Eye, EyeOff } from "lucide-react"
 
-export default function ClientSettings() {
+export default function AdminSettings() {
   const { user, refreshUser } = useAuth()
   const { toast } = useToast()
   const [name, setName] = useState(user?.name || "")

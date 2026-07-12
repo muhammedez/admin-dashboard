@@ -16,6 +16,7 @@ const adminNav: NavItem[] = [
   { label: "Customers", href: "/admin/customers", icon: Users },
   { label: "Transactions", href: "/admin/transactions", icon: ArrowLeftRight },
   { label: "Categories", href: "/admin/categories", icon: Tags },
+  { label: "Settings", href: "/admin/settings", icon: Settings },
 ]
 
 const clientNav: NavItem[] = [

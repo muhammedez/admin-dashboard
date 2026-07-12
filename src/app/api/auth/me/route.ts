@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
-import { getDb, getSession } from "@/lib/db"
+import { getDb, getSession, verifyPassword } from "@/lib/db"
 import { getTokenFromRequest } from "@/lib/api-auth"
 import { validate, updateProfileSchema } from "@/lib/validation"
-import { hash as bcryptHash, compare as bcryptCompare } from "bcrypt-ts"
+import { hash as bcryptHash } from "bcrypt-ts"
 
 export async function GET(request: Request) {
   const token = getTokenFromRequest(request)
@@ -46,9 +46,7 @@ export async function PUT(request: Request) {
     if (!currentPassword) {
       return NextResponse.json({ error: "Current password is required to set a new password" }, { status: 400 })
     }
-    const valid = user.password.startsWith("$2")
-      ? await bcryptCompare(currentPassword, user.password)
-      : currentPassword === user.password
+    const valid = await verifyPassword(currentPassword, user.password)
     if (!valid) {
       return NextResponse.json({ error: "Current password is incorrect" }, { status: 400 })
     }
