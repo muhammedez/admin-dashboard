@@ -22,11 +22,20 @@ export async function GET(request: NextRequest) {
   const pf = dateFilter("createdAt")
   const tf = dateFilter("timestamp")
   const cf = dateFilter("joinedAt")
+  const allParams = [...pf.params, ...cf.params, ...tf.params, ...tf.params, ...tf.params, ...tf.params]
 
-  const productCount = (await db.prepare(`SELECT COUNT(*) as c FROM products WHERE 1=1 ${pf.clause}`).get(...pf.params) as any).c
-  const customerCount = (await db.prepare(`SELECT COUNT(*) as c FROM customers WHERE status = 'active' ${cf.clause}`).get(...cf.params) as any).c
-  const txCount = (await db.prepare(`SELECT COUNT(*) as c FROM transactions WHERE status = 'completed' ${tf.clause}`).get(...tf.params) as any).c
-  const totalRevenue = (await db.prepare(`SELECT COALESCE(SUM(amount),0) as s FROM transactions WHERE status = 'completed' ${tf.clause}`).get(...tf.params) as any).s
+  const mainRow = await db.prepare(`
+    SELECT
+      (SELECT COUNT(*) FROM products WHERE 1=1 ${pf.clause}) as productCount,
+      (SELECT COUNT(*) FROM customers WHERE status = 'active' ${cf.clause}) as customerCount,
+      (SELECT COUNT(*) FROM transactions WHERE status = 'completed' ${tf.clause}) as txCount,
+      (SELECT COALESCE(SUM(amount),0) FROM transactions WHERE status = 'completed' ${tf.clause}) as totalRevenue
+  `).get(...allParams) as any
+
+  const productCount = mainRow.productCount
+  const customerCount = mainRow.customerCount
+  const txCount = mainRow.txCount
+  const totalRevenue = mainRow.totalRevenue
 
   const transactions = await db.prepare(`SELECT amount, timestamp FROM transactions WHERE status = 'completed' ${tf.clause} ORDER BY timestamp`).all(...tf.params) as any[]
 
@@ -73,23 +82,23 @@ export async function GET(request: NextRequest) {
     const rangeLen = to ? new Date(to).getTime() - new Date(from).getTime() : 7 * 86400000
     const prevFrom = new Date(new Date(from).getTime() - rangeLen - 86400000).toISOString().split("T")[0]
     const prevTo = new Date(new Date(from).getTime() - 86400000).toISOString().split("T")[0]
-
-    const prevProductFilter = `createdAt >= ? AND createdAt <= ?`
     const prevTxFilter = `timestamp >= ? AND timestamp <= ?`
     const prevCustFilter = `joinedAt >= ? AND joinedAt <= ?`
+    const prevProductFilter = `createdAt >= ? AND createdAt <= ?`
     const prevParams = [prevFrom, prevTo + "T23:59:59"]
 
-    const pc = await db.prepare(`SELECT COUNT(*) as c FROM products WHERE ${prevProductFilter}`).get(...prevParams) as any
-    prevProductCount = pc.c || 1
+    const prevRow = await db.prepare(`
+      SELECT
+        (SELECT COUNT(*) FROM products WHERE ${prevProductFilter}) as prevProductCount,
+        (SELECT COUNT(*) FROM transactions WHERE status = 'completed' AND ${prevTxFilter}) as prevTxCount,
+        (SELECT COALESCE(SUM(amount),0) FROM transactions WHERE status = 'completed' AND ${prevTxFilter}) as prevRevenue,
+        (SELECT COUNT(*) FROM customers WHERE status = 'active' AND ${prevCustFilter}) as prevCustomerCount
+    `).get(...prevParams, ...prevParams, ...prevParams, ...prevParams) as any
 
-    const tc = await db.prepare(`SELECT COUNT(*) as c FROM transactions WHERE status = 'completed' AND ${prevTxFilter}`).get(...prevParams) as any
-    prevTxCount = tc.c || 1
-
-    const rv = await db.prepare(`SELECT COALESCE(SUM(amount),0) as s FROM transactions WHERE status = 'completed' AND ${prevTxFilter}`).get(...prevParams) as any
-    prevRevenue = rv.s || 1
-
-    const cc = await db.prepare(`SELECT COUNT(*) as c FROM customers WHERE status = 'active' AND ${prevCustFilter}`).get(...prevParams) as any
-    prevCustomerCount = cc.c || 1
+    prevProductCount = prevRow.prevProductCount || 1
+    prevTxCount = prevRow.prevTxCount || 1
+    prevRevenue = prevRow.prevRevenue || 1
+    prevCustomerCount = prevRow.prevCustomerCount || 1
   }
 
   return NextResponse.json({

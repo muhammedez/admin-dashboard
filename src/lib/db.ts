@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from "crypto"
+import { hash as bcryptHash, compare as bcryptCompare } from "bcrypt-ts"
 
 interface DbRow { [key: string]: any }
 interface Stmt {
@@ -124,6 +125,15 @@ async function initSchema(db: Db) {
       userId INTEGER NOT NULL REFERENCES users(id),
       createdAt TEXT NOT NULL DEFAULT (datetime('now'))
     );
+    CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);
+    CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
+    CREATE INDEX IF NOT EXISTS idx_products_createdAt ON products(createdAt);
+    CREATE INDEX IF NOT EXISTS idx_transactions_customerName ON transactions(customerName);
+    CREATE INDEX IF NOT EXISTS idx_transactions_status ON transactions(status);
+    CREATE INDEX IF NOT EXISTS idx_transactions_timestamp ON transactions(timestamp);
+    CREATE INDEX IF NOT EXISTS idx_customers_name ON customers(name);
+    CREATE INDEX IF NOT EXISTS idx_customers_email ON customers(email);
+    CREATE INDEX IF NOT EXISTS idx_customers_status ON customers(status);
   `)
 
   try { await db.exec("ALTER TABLE customers ADD COLUMN userId INTEGER REFERENCES users(id)") } catch { /* already exists */ }
@@ -134,8 +144,16 @@ async function initSchema(db: Db) {
   }
 }
 
-export function hashPassword(password: string): string {
-  return createHash("sha256").update(password).digest("hex")
+export async function hashPassword(password: string): Promise<string> {
+  return bcryptHash(password, 10)
+}
+
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  try {
+    return await bcryptCompare(password, hash)
+  } catch {
+    return createHash("sha256").update(password).digest("hex") === hash
+  }
 }
 
 export function generateToken(): string {
@@ -180,9 +198,9 @@ async function seed(db: Db) {
       ('CAT-5', 'Sports');
   `)
 
-  const users = [
-    ["Admin User", "admin@dashboard.com", hashPassword("admin123"), "admin"],
-    ["Client User", "client@dashboard.com", hashPassword("client123"), "client"],
+  const users: [string, string, string, string][] = [
+    ["Admin User", "admin@dashboard.com", await hashPassword("admin123"), "admin"],
+    ["Client User", "client@dashboard.com", await hashPassword("client123"), "client"],
   ]
   for (const u of users) {
     await db.prepare("INSERT OR IGNORE INTO users (name, email, password, role) VALUES (?, ?, ?, ?)").run(...u)

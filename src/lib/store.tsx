@@ -148,8 +148,21 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    const id = setInterval(() => notifyChange(), 30000)
-    return () => clearInterval(id)
+    let id: ReturnType<typeof setInterval>
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        id = setInterval(() => notifyChange(), 30000)
+        notifyChange()
+      } else {
+        clearInterval(id)
+      }
+    }
+    id = setInterval(() => notifyChange(), 30000)
+    document.addEventListener("visibilitychange", onVisibility)
+    return () => {
+      clearInterval(id)
+      document.removeEventListener("visibilitychange", onVisibility)
+    }
   }, [notifyChange])
 
   const handleSetDateRange = useCallback((range: { from: string; to: string }) => {

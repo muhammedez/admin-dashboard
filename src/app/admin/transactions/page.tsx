@@ -2,11 +2,10 @@
 
 import { TransactionList } from "@/components/dashboard/TransactionList"
 import { Download } from "lucide-react"
-import { api } from "@/lib/api"
 import { useExportCSV } from "@/hooks/useExportCSV"
 
 export default function AdminTransactions() {
-  const { exporting, handleExport } = useExportCSV(() => api.transactions.list({ limit: 9999 }), "transactions")
+  const { exporting, handleExport } = useExportCSV("/api/export/transactions", "transactions")
 
   return (
     <div className="space-y-6">

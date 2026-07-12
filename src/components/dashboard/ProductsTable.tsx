@@ -63,10 +63,22 @@ export function ProductsTable() {
   }, [])
 
   useEffect(() => {
-    const id = setInterval(() => {
-      loadRef.current(page, search, category)
-    }, 2000)
-    return () => clearInterval(id)
+    let id: ReturnType<typeof setInterval>
+    const tick = () => { loadRef.current(page, search, category) }
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        id = setInterval(tick, 30000)
+        tick()
+      } else {
+        clearInterval(id)
+      }
+    }
+    id = setInterval(tick, 30000)
+    document.addEventListener("visibilitychange", onVisibility)
+    return () => {
+      clearInterval(id)
+      document.removeEventListener("visibilitychange", onVisibility)
+    }
   }, [page, search, category])
 
   const goToPage = (p: number) => {

@@ -12,7 +12,6 @@ export default function SignupPage() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [role, setRole] = useState("client")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -24,15 +23,14 @@ export default function SignupPage() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({ name, email, password }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: "Signup failed" }))
         throw new Error(err.error)
       }
-      const data = await res.json()
       await login(email, password)
-      router.push(data.user.role === "admin" ? "/admin" : "/client")
+      router.push("/client")
     } catch (err: any) {
       setError(err.message)
     }
@@ -66,15 +64,6 @@ export default function SignupPage() {
             <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)}
                              className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-gray-400" />
           </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Role</label>
-            <select value={role} onChange={(e) => setRole(e.target.value)}
-                             className="w-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-900 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:focus:border-gray-400">
-              <option value="client">Client</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-
           {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
           <button type="submit" disabled={loading}

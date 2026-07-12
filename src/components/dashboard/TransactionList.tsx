@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { CheckCircle, Clock, XCircle, Search, Filter, Plus, Pencil, Trash2, X } from "lucide-react"
 import { api } from "@/lib/api"
 import { useDashboard } from "@/lib/store"
@@ -244,6 +244,8 @@ export function TransactionList({ customerName: filterCustomer }: { customerName
   )
 }
 
+const formDataCache = { customers: null as any[] | null, products: null as any[] | null }
+
 function TransactionForm({
   transaction,
   onSave,
@@ -253,8 +255,8 @@ function TransactionForm({
   onSave: (p: any) => Promise<void>
   onCancel: () => void
 }) {
-  const [customers, setCustomers] = useState<any[]>([])
-  const [products, setProducts] = useState<any[]>([])
+  const [customers, setCustomers] = useState<any[]>(formDataCache.customers || [])
+  const [products, setProducts] = useState<any[]>(formDataCache.products || [])
   const [stockWarning, setStockWarning] = useState("")
   const [form, setForm] = useState(
     transaction ? { ...transaction, amount: String(transaction.amount), quantity: String(transaction.quantity || 1) } : { customerName: "", productName: "", quantity: "1", amount: "", status: "completed", paymentMethod: "Credit Card" }
@@ -262,8 +264,12 @@ function TransactionForm({
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    api.customers.list({ limit: 100 }).then((r) => setCustomers(r.data)).catch(() => {})
-    api.products.list({ limit: 100 }).then((r) => setProducts(r.data)).catch(() => {})
+    if (!formDataCache.customers) {
+      api.customers.list({ limit: 100 }).then((r) => { formDataCache.customers = r.data; setCustomers(r.data) }).catch(() => {})
+    }
+    if (!formDataCache.products) {
+      api.products.list({ limit: 100 }).then((r) => { formDataCache.products = r.data; setProducts(r.data) }).catch(() => {})
+    }
   }, [])
 
   const selectedProduct = products.find((p: any) => p.name === form.productName)

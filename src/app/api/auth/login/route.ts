@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getDb, createSession, hashPassword } from "@/lib/db"
+import { getDb, createSession, verifyPassword } from "@/lib/db"
 
 export async function POST(request: Request) {
   const { email, password } = await request.json()
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   const db = await getDb()
   const user = await db.prepare("SELECT id, name, email, password, role FROM users WHERE email = ?").get(email) as any
 
-  if (!user || user.password !== hashPassword(password)) {
+  if (!user || !(await verifyPassword(password, user.password))) {
     return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
   }
 

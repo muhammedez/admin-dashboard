@@ -2,11 +2,10 @@
 
 import { CustomersTable } from "@/components/dashboard/CustomersTable"
 import { Download } from "lucide-react"
-import { api } from "@/lib/api"
 import { useExportCSV } from "@/hooks/useExportCSV"
 
 export default function AdminCustomers() {
-  const { exporting, handleExport } = useExportCSV(() => api.customers.list({ limit: 9999 }), "customers")
+  const { exporting, handleExport } = useExportCSV("/api/export/customers", "customers")
 
   return (
     <div className="space-y-6">

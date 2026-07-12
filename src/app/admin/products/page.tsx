@@ -2,11 +2,10 @@
 
 import { ProductsTable } from "@/components/dashboard/ProductsTable"
 import { Download } from "lucide-react"
-import { api } from "@/lib/api"
 import { useExportCSV } from "@/hooks/useExportCSV"
 
 export default function AdminProducts() {
-  const { exporting, handleExport } = useExportCSV(() => api.products.list({ limit: 9999 }), "products")
+  const { exporting, handleExport } = useExportCSV("/api/export/products", "products")
 
   return (
     <div className="space-y-6">
